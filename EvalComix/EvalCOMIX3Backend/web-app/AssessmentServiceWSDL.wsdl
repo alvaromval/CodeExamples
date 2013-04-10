@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<description 
+        xmlns="http://www.w3.org/ns/wsdl"
+        targetNamespace="http://avanza.uca.es/assessmentservice"
+		xmlns:whttp="http://www.w3.org/ns/wsdl/http"
+		xmlns:wsdlx="http://www.w3.org/ns/wsdl-extensions"
+        xmlns:ins="http://avanza.uca.es/assessmentservice/instrument"
+		xmlns:ast="http://avanza.uca.es/assessmentservice/assessment"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+        <documentation>
+                This document describes the interface methods to create and manage assessment instruments
+        </documentation>
+
+        <types>
+				<xs:import
+                        namespace="http://avanza.uca.es/assessmentservice/instrument"
+                        schemaLocation="http://avanza.uca.es/assessmentservice/Instrument.xsd" />
+				<xs:import
+                        namespace="http://avanza.uca.es/assessmentservice/assessment"
+                        schemaLocation="http://avanza.uca.es/assessmentservice/Assessment.xsd" />		
+        </types>
+
+        <interface name="assessmentserviceInterface">
+
+                <operation name="getInstrumentXML"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="#none" />
+                        <output messageLabel="Out"
+                                element="ins:instrument" />
+                </operation>
+				
+				<operation name="getInstrumentInterface"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="#none" />
+                        <output messageLabel="Out"
+                                element="xs:base64Binary" />
+                </operation>
+				
+				
+				<operation name="postInstrument"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="ins:instrument" />
+                        <output messageLabel="Out"
+                                element="ins:instrument" />
+                </operation>
+
+                <operation name="putInstrument"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In"
+                                element="ins:instrument" />
+                        <output messageLabel="Out"
+                                element="ins:instrument" />
+                </operation>
+				
+				<operation name="deleteInstrument"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="#none" />
+                        <output messageLabel="Out"
+                                element="xs:string" />
+                </operation>
+				
+				<operation name="getAssessmentXML"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="#none" />
+                        <output messageLabel="Out"
+                                element="ast:assessment" />
+                </operation>
+				
+				<operation name="getAssessmentInterface"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="#none" />
+                        <output messageLabel="Out"
+                                element="ast:assessment" />
+                </operation>
+				
+				
+				<operation name="postAssessment"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="ast:assessment" />
+                        <output messageLabel="Out"
+                                element="ast:assessment" />
+                </operation>
+
+                <operation name="putAssessment"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In"
+                                element="ins:instrument" />
+                        <output messageLabel="Out"
+                                element="ast:assessment" />
+                </operation>
+				
+				<operation name="deleteAssessment"
+                        pattern="http://www.w3.org/ns/wsdl/in-out">
+                        <input messageLabel="In" element="#none" />
+                        <output messageLabel="Out"
+                                element="ast:assessment" />
+                </operation>
+
+        </interface>
+		
+        <binding name="assessmentserviceHTTPBinding"
+			type="http://www.w3.org/ns/wsdl/http"
+			interface="tns:assessmentserviceInterface"
+			whttp:methodDefault="GET">
+
+			<operation ref="tns:getInstrumentXML"
+			  whttp:method="GET"
+			  whttp:location="http://avanza.uca.es/assessmentservice/instrument/get/{identifier}" />
+
+			<operation ref="tns:getInstrumentInterface"
+			  whttp:method="GET"
+			  whttp:location="http://avanza.uca.es/assessmentservice/instrument/{identifier/}" />
+			
+			<operation ref="tns:postInstrument"
+			  whttp:method="POST"
+			  whttp:location="http://avanza.uca.es/assessmentservice/instrument/" />
+			  
+			<operation ref="tns:putInstrument"
+			  whttp:method="PUT"
+			  whttp:location="http://avanza.uca.es/assessmentservice/instrument/" />
+
+			<operation ref="tns:deleteInstrument"
+			  whttp:method="DELETE"
+			  whttp:location="http://avanza.uca.es/assessmentservice/instrument/{identifier/}" />	
+			
+			<operation ref="tns:getAssessmentXML"
+			  whttp:method="GET"
+			  whttp:location="http://avanza.uca.es/assessmentservice/assessment/get/{identifier}" />
+
+			<operation ref="tns:getAssessmentInterface"
+			  whttp:method="GET"
+			  whttp:location="http://avanza.uca.es/assessmentservice/assessment/{identifier/}" />
+			
+			<operation ref="tns:postAssessment"
+			  whttp:method="POST"
+			  whttp:location="http://avanza.uca.es/assessmentservice/assessment/" />
+			  
+			<operation ref="tns:putAssessment"
+			  whttp:method="PUT"
+			  whttp:location="http://avanza.uca.es/assessmentservice/assessment/" />
+
+			<operation ref="tns:deleteAssessment"
+			  whttp:method="DELETE"
+			  whttp:location="http://avanza.uca.es/assessmentservice/assessment/{identifier/}" />				  
+		</binding>
+		
+		<service name="AssessmentService" interface="tns:assessmentserviceInterface">
+				
+				<documentation>
+					A service to create assessments and to manage them
+				</documentation>
+				
+				<endpoint name="assessmentserviceHTTPEndpoint"
+					binding="tns:assessmentserviceHTTPBinding"
+					address="http://www.avanza.uca.es/assessmentservice/">
+				</endpoint>
+		
+		</service>
+		
+</description>

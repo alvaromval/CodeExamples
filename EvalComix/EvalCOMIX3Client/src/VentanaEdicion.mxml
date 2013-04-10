@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VentanaGenerica xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">	
+	<mx:Script>
+		<![CDATA[
+			import componentes.VentanaConsultaGuardar;
+			import mx.core.Application;
+			import utilidades.Common;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			import utilidades.Constants;
+			import mx.rpc.http.HTTPService;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import parser.ControladorParser;
+			/**
+			 * Establece el identificador del instrumento a crear o recuperar, indica si el instrumento
+			 * existe y se va a abrir o se va a crear uno nuevo con el identificador pasado como parámetro
+			 */
+			public function inicializar(identificador:String):void
+			{	
+				super.init(identificador);
+				// Debemos obtener la estructura por http
+				var servicio:HTTPService = new HTTPService();
+				servicio.url = Constants.URL_ObtenerInstrumento + "/" + this.getIdentificador();
+				servicio.method = "POST";
+				servicio.resultFormat = "xml";
+				// Añadimos los manejadores para procesar la respuesta
+				servicio.addEventListener(ResultEvent.RESULT, manejadorObtener);
+				servicio.addEventListener(FaultEvent.FAULT, manejadorErrorObtener);
+				// Enviamos
+				servicio.send();
+			}
+			
+			private function manejadorObtener(event:ResultEvent):void
+			{
+				// El resultado es un XML
+				var response:String = event.result.toString();
+	      		var xmlDoc:XMLDocument;
+	      		try
+	        	{
+	        		// Comprobamos si el resultado es un XML
+	         		xmlDoc = new XMLDocument(response);
+	         		// Procesamos el XML
+	                var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);
+	                var resultObj:Object = decoder.decodeXML(xmlDoc);
+                	// Si la operación se ha realizado correctamente
+	                if(resultObj.instrument != null)
+	                {	
+            			this.setEstructura(resultObj.instrument.structure);
+	                }		
+	               	else if(resultObj.error != null)
+	               	{
+	                	Alert.show(resultObj.error, "Error");
+	                	this.enabled = false;
+	                }
+	         	}
+	          	catch(error:Error)
+	        	{
+	        		Alert.show(resourceManager.getString("myBundle", "error_response_format"), resourceManager.getString("myBundle", "error"));
+	        		this.enabled = false;
+	       		}
+			}
+			
+			private function manejadorErrorObtener(event:FaultEvent):void
+			{
+				Alert.show(resourceManager.getString("myBundle", "error_response"), resourceManager.getString("myBundle", "error"));
+				this.enabled = false;
+			}
+			
+			protected override function guardar(event:Event=null):void
+			{
+				if(event)
+				{
+					if(event.currentTarget is VentanaConsultaGuardar)
+					{
+						var vcg:VentanaConsultaGuardar = event.currentTarget as VentanaConsultaGuardar;
+						if(vcg.aceptar())
+						{
+							var servicio:HTTPService = new HTTPService();
+							servicio.url = Constants.URL_GuardarInstrumento + "/" + this.getIdentificador();
+							servicio.request = {structure:this.getInstrumento().toXML(), type:this.getInstrumento().getTipo(), title:this.getInstrumento().getName(), description:this.getInstrumento().getDescripcion()};
+							servicio.method = "POST";
+							servicio.resultFormat = "xml";
+							// Añadimos los manejadores para procesar la respuesta
+							servicio.addEventListener(ResultEvent.RESULT, manejadorGuardar);
+							servicio.addEventListener(FaultEvent.FAULT, manejadorErrorGuardar);
+							// Enviamos
+							servicio.send();
+						}
+						else if(vcg.verErrores())
+						{
+							this.verEstadoInstrumento();
+						}
+					}	
+				}
+				else
+				{
+					var servicio:HTTPService = new HTTPService();
+					servicio.url = Constants.URL_GuardarInstrumento + "/" + this.getIdentificador();
+					servicio.request = {structure:this.getInstrumento().toXML(), type:this.getInstrumento().getTipo(), title:this.getInstrumento().getName()};
+					servicio.method = "POST";
+					servicio.resultFormat = "xml";
+					// Añadimos los manejadores para procesar la respuesta
+					servicio.addEventListener(ResultEvent.RESULT, manejadorGuardar);
+					servicio.addEventListener(FaultEvent.FAULT, manejadorErrorGuardar);
+					// Enviamos
+					servicio.send();
+				}
+			}
+			
+			private function manejadorGuardar(event:ResultEvent):void
+			{
+				// El resultado es un XML
+				var response:String = event.result.toString();
+	      		var xmlDoc:XMLDocument;
+	      		try
+	        	{
+	        		// Comprobamos si el resultado es un XML
+	         		xmlDoc = new XMLDocument(response);
+	         		// Procesamos el XML
+	                var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);
+	                var resultObj:Object = decoder.decodeXML(xmlDoc);
+                	// Si la operación se ha realizado correctamente
+	                if(resultObj.instrument != null)
+	                {	
+	                	// Mostramos el mensaje de éxito
+	                	Alert.show(resourceManager.getString("myBundle", "success_update"), resourceManager.getString("myBundle", "success"));
+	                	// Redireccionamos si se nos ha pasado una url como parámetro
+	                	if(Application.application.parameters.url)
+	                	{
+	                		var url:String = unescape(Application.application.parameters.url);  //+ "?identifier=" + this.getIdentificador() + "&title=" + this.getInstrumento().getName() + "&description=" + this.getInstrumento().getDescription();
+				        	var u:URLRequest = new URLRequest(url);
+				        	u.method = "POST";
+				        	// Creamos las variables a enviar
+				        	var variables:URLVariables = new URLVariables();
+				        	variables.identifier = this.getIdentificador();
+				        	variables.title = this.getInstrumento().getName();
+				        	variables.description = this.getInstrumento().getDescripcion();
+				        	variables.type = this.getInstrumento().getTipo();
+				        	u.data = variables;
+				        	// Redireccionamos
+							navigateToURL(u,"_self");
+	                	}
+	                }		
+	               	else if(resultObj.error != null)
+	               	{
+	                	Alert.show(resultObj.error, "Error");
+	                	this.enabled = false;
+	                }
+	         	}
+	          	catch(error:Error)
+	        	{
+	        		Alert.show(resourceManager.getString("myBundle", "error_response_format"), resourceManager.getString("myBundle", "error"));
+	        		this.enabled = false;
+	       		}
+			}
+			
+			private function manejadorErrorGuardar(event:FaultEvent):void
+			{
+				Alert.show(resourceManager.getString("myBundle", "error_response"), resourceManager.getString("myBundle", "error"));
+				this.enabled = false;
+			}
+		]]>
+	</mx:Script>
+</VentanaGenerica>

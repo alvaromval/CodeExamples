@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstrumentoEvaluacion xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" borderStyle="none" borderColor="#0C6D05" backgroundColor="#D2E7C9">
+	<mx:VBox minWidth="1200">
+	<mx:Button id="buttonBorrar" click="borrar()" width="12" cornerRadius="0" icon="@Embed(source='../img/iconClose2.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+	<mx:HBox id="encabezado" horizontalGap="12" x="10" y="12" paddingLeft="10" minWidth="1200">
+		<mx:Label text="{resourceManager.getString('myBundle', 'control_list_value_list') + ':'}" id="LabelTitulo" height="100%" fontWeight="bold"/>
+		<mx:TextArea id="nomDim" x="246" y="8" width="200" text="@Resource(bundle='myBundle', key='title')"/>
+		<mx:Label x="461" y="10" text="@Resource(bundle='myBundle', key='n_dimensions')" fontWeight="bold" id="LabelDimensiones"/>
+		<mx:TextInput id="numDim" x="562" y="8" width="42" restrict="/0-9/"/>
+		<mx:CheckBox x="620" y="8" label="@Resource(bundle='myBundle', key='global_assessment_check')" fontWeight="bold" labelPlacement="left" id="valGlobal" click="activarValoracionGlobal()"/>
+		<mx:Label x="750" y="10" text="@Resource(bundle='myBundle', key='n_values')" fontWeight="bold" id="LabelValores"/>
+		<mx:TextInput id="numVal" x="822" y="8" width="42" enabled="false" restrict="/0-9/"/>
+		<mx:Button id="buttonInsertar" x="872" y="8" width="30" cornerRadius="0" click="insertar(0,0,event);">
+			<mx:icon>@Embed(source='../img/iconDown.gif')</mx:icon>
+		</mx:Button>
+		<mx:Label text="@Resource(bundle='myBundle', key='grade')" fontWeight="bold" id="LabelNota"/>
+		<mx:TextInput id="notaText" width="40" editable="false" fontWeight="bold" backgroundColor="#000000" color="#FFFFFF" text="0" textAlign="right" updateComplete="actualizarNotaPadre()" restrict="/0-9/"/>
+		<mx:HBox id="panelPorcentaje" width="100%" height="100%" visible="false">
+			<mx:Label text="@Resource(bundle='myBundle', key='percentage')" toolTip="@Resource(bundle='myBundle', key='help_percentage')" id="LabelPorcentaje"/>
+			<mx:TextInput width="34" maxChars="3" id="porcentajeText" backgroundColor="#000000" color="#00F00F" fontFamily="Verdana" fontWeight="bold" textAlign="right" restrict="/0-9/"/>
+			<mx:Button id="buttonPorcentaje" width="18" cornerRadius="0" icon="@Embed(source='../img/iconPrctg.gif')" click="insertarPorcentaje(0, event);"/>
+		</mx:HBox>
+	</mx:HBox>
+	<mx:HBox width="100%" paddingLeft="10" id="panelDescripcion">
+		<mx:Label text="@Resource(bundle='myBundle', key='instrument_description')" fontWeight="bold"/>
+		<mx:Button icon="@Embed(source='../img/iconRevisar.gif')" width="20" height="20" cornerRadius="0" id="buttonDescripcion" click="verDescripcion()"/>
+	</mx:HBox>
+	<mx:VBox id="panel" x="68" y="38" width="100%" horizontalAlign="left" borderStyle="none" borderThickness="2" borderColor="#0B5981" alpha="1.0" backgroundColor="#F77808" backgroundAlpha="0.0" paddingLeft="30" paddingRight="10">
+	</mx:VBox>
+	<mx:Button id="buttonAnyadir" click="anyadir()" x="1" y="44" width="12" cornerRadius="0" icon="@Embed(source='../img/iconAnyadir.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+	<mx:Script>
+		<![CDATA[
+			import utilidades.Constants;
+			import utilidades.Common;
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			use namespace mx_internal;
+			
+			private var dimensiones:ArrayCollection = new ArrayCollection();
+			
+			private var valoracionGlobal:ValoracionGlobal = null;
+			
+			private var nota:int = 0;
+			
+			// Atributos para la revisión
+			private var labelNotaRevision:Label = null;
+			private var textNotaRevision:TextInput = null;
+			
+			public override function setName(nombre:String):void
+			{
+				this.nomDim.text = nombre;
+			}
+			
+			public override function getName():String
+			{
+				return this.nomDim.text;
+			}
+			
+			public function setNumDim(numDim:int):void
+			{
+				this.numDim.text = numDim.toString();
+			}
+			
+			public function getNumDim():int
+			{
+				return this.dimensiones.length;
+			}
+			
+			public function setNumValGlobal(numValores:int):void
+			{
+				this.numVal.text = numValores.toString();
+			}
+			
+			public function getNumValGlobal():int
+			{
+				return this.valoracionGlobal.getNumValores();
+			}
+			
+			/** 
+			 * Método que inserta un número determinado de dimensiones en el objeto actual
+			 */
+			private function insertar(numDimensiones:int, numVals:int, event:MouseEvent=null):void
+			{
+				if(event != null)
+				{
+					numDimensiones = Common.parse_int(numDim.text);
+					numVals = Common.parse_int(numVal.text);
+					if(numDimensiones < 0)
+					{
+						Alert.show(resourceManager.getString("myBundle", "warning_num_dims"), resourceManager.getString("myBundle", "warning"));
+					}
+					if(valGlobal.selected && numVals <= 0)
+					{
+						Alert.show(resourceManager.getString("myBundle", "warning_num_values"), resourceManager.getString("myBundle", "warning"));
+					}
+				}
+				if(numDimensiones >= 0)
+				{
+					// Insertamos la valoración global
+					// Si el campo de valoración global está activado y el número de valores es mayor que cero
+					if(valGlobal.selected && numVals > 0)
+					{
+						// Si la valoración global ya existe, la actualizamos
+						if(valoracionGlobal != null)
+						{
+							valoracionGlobal.insertar(numVals);
+						}
+						else
+						{
+							// Si la creamos por primera vez
+							addValoracionGlobal();
+							/*if(this.getDimensiones().length > 0)
+							{
+								valoracionGlobal.setPorcentaje(0);
+							}
+							else
+							{
+								valoracionGlobal.setPorcentaje((int)(100/(numDimensiones + 1)))
+							}*/
+							valoracionGlobal.insertarPorcentaje((int)(100/(this.getElementos().length)));
+						}
+					}
+					// Si ya habíamos insertado
+					if(this.dimensiones.length > 0 || (this.getValoracionGlobal() != null && this.getValoracionGlobal().getPorcentaje() == 100))
+					{
+						// Si el nuevo número de dimensiones es mayor
+						if(dimensiones.length < numDimensiones)
+						{
+							// Insertamos nuevos atributos al final
+							var newDimensiones:int = numDimensiones;
+							for(var i:int = dimensiones.length; i < newDimensiones; i++)
+							{
+								var dimension:Dimension = new Dimension();
+								// Debemos comprobar que el nuevo nombre que insertamos no está repetido
+								var nombre:String = renombrarDimension(i);
+								addDimension(dimension, i);
+								dimension.nombre.text = nombre;
+								// Establecemos a 0 el porcentaje del nuevo elemento
+								if(dimensiones.getItemAt(0) != null)
+								{
+									//dimension.setPorcentaje(0);
+									dimension.insertarPorcentaje((int)(100/(this.getElementos().length)));
+								}
+							}
+						}
+						else
+						{
+							// Si el nuevo número de atributos es menor
+							if(dimensiones.length > numDimensiones)
+							{
+								// Eliminamos los últimos atributos
+								var newDimensiones:int = numDimensiones;
+								for(var i:int = dimensiones.length - 1; i >= newDimensiones; i--)
+								{
+									removeDimension(dimensiones.getItemAt(i) as Dimension);
+								}
+								// Actualizamos los porcentajes del resto de subdimensiones
+								var total:int = 0;
+								var elementos:ArrayCollection = this.getElementos();
+								for(var i:int = 0; i < elementos.length; i++)
+								{
+									total += (elementos.getItemAt(i) as ElementoInstrumento).getPorcentaje();
+								}
+								if(total > 0)
+								{
+									for(var i:int = 0; i < elementos.length; i++)
+									{
+										var elemento:ElementoInstrumento = elementos.getItemAt(i) as ElementoInstrumento;
+										if(elemento.getPorcentaje() != -1)
+										{
+											var newPorcentaje:int = (elemento.getPorcentaje()/total) * 100;
+											//var newPorcentaje:int = subDim.getPorcentaje() * (oldSubDimensiones/newSubdimensiones) * (total/100));//(oldSubDimensiones/newSubDimensiones) / (total/newSubDimensiones);
+											elemento.setPorcentaje(newPorcentaje);
+										}
+									}
+								}
+								else if(total == 0)
+								{
+									for(var i:int = 0; i < elementos.length; i++)
+									{
+										var elemento:ElementoInstrumento = elementos.getItemAt(i) as ElementoInstrumento;
+										elemento.setPorcentaje(100/elementos.length);
+									}		
+								}
+							}
+						}
+					}
+					// Si es la primera vez que insertamos
+					else
+					{
+						var dimensiones:int = numDimensiones; 
+						for(var i:int = 0; i < dimensiones; i++)
+						{
+							var dim:Dimension = new Dimension();
+							addDimension(dim, i);
+							dim.nombre.text = "Dimension" + i;
+							// Establecemos el porcentaje, por defecto el mismo a todas las dimensiones
+							if(valGlobal.selected && numVals > 0)
+							{
+								dim.setPorcentaje((int)(100/(numDimensiones + 1)));
+							}
+							else
+							{
+								dim.setPorcentaje((int)(100/numDimensiones));
+							}
+						}
+					}
+				}
+				actualizarNota();
+			}
+			
+			public function addDimension(dim:Dimension, index:int=-1):void
+			{
+				if(index == -1)
+				{
+					panel.addChild(dim);
+					this.dimensiones.addItem(dim);
+					dim.setInstrumento(this);
+				}
+				else
+				{
+					panel.addChildAt(dim, index);
+					this.dimensiones.addItemAt(dim, index);
+					dim.setInstrumento(this);
+				}
+			}
+			
+			public function addValoracionGlobal(numVals:int=-1):void
+			{
+				// Si la creamos por primera vez
+				valoracionGlobal = new ValoracionGlobal();
+				panel.addChild(valoracionGlobal);
+				valoracionGlobal.setInstrumento(this);
+				// Habilitamos la casilla de valoración global y número de valores si no lo está
+				this.valGlobal.selected = true;
+				this.numVal.enabled = true;
+				if(numVals == -1)
+				{
+					valoracionGlobal.numVal.text = numVal.text;
+					valoracionGlobal.insertar(parseInt(this.numVal.text));
+				}
+				else
+				{
+					valoracionGlobal.numVal.text = numVals.toString();
+					valoracionGlobal.insertar(numVals);
+					this.numVal.text = numVals.toString();
+				}
+				this.numVal.addEventListener(Event.CHANGE, cambiarValores);
+			}
+			
+			public function renombrarDimension(pos:int):String
+			{
+				// Debemos comprobar que el nuevo nombre que insertamos no está repetido
+				var index:int = pos;
+				var seguir:Boolean = true;
+				var nombre:String = "Dimension" + index;
+				while(seguir)
+				{
+					var existe:Boolean = false;
+					for(var j:int = 0; j < dimensiones.length; j++)
+					{
+						if((dimensiones.getItemAt(j) as Dimension).nombre.text == nombre)
+						{
+							nombre = "Dimension" + (index++);
+							existe = true;
+						}
+					}
+					seguir = existe;
+				}
+				return nombre;
+			}
+			
+			public function removeDimension(dim:Dimension, actualizarContador:Boolean=false):void
+			{
+				for(var i:int = 0; i < dimensiones.length; i++)
+				{
+					if(dimensiones.getItemAt(i) == dim)
+					{
+						panel.removeChildAt(i);
+						dimensiones.removeItemAt(i);
+						if(actualizarContador)
+						{	
+							this.numDim.text = (parseInt(this.numDim.text) - 1).toString();
+						}
+					}
+				}   
+			}
+			
+			public function removeValoracionGlobal(actualizarContador:Boolean=false):void
+			{
+				for(var i:int = 0; i < panel.getChildren().length; i++)
+				{
+					if(panel.getChildAt(i) == valoracionGlobal)
+					{
+						valoracionGlobal = null;
+						panel.removeChildAt(i);
+						if(actualizarContador)
+						{
+							this.valGlobal.selected = false;
+							this.numVal.text = "";
+							this.numVal.enabled = false;
+						}
+						return;
+					}
+				}
+			}
+			
+			public function getDimensiones():ArrayCollection
+			{
+				return this.dimensiones;
+			}
+			
+			public function getValoracionGlobal():ValoracionGlobal
+			{
+				return this.valoracionGlobal;
+			}
+			
+			/**
+			 * Devuelve las dimensiones y la valoración global en el mismo array
+			 */
+			public function getElementos():ArrayCollection
+			{
+				var elementos:ArrayCollection = new ArrayCollection();
+				for(var i:int = 0; i < dimensiones.length; i++)
+				{
+					elementos.addItem(dimensiones.getItemAt(i));
+				}
+				if(this.getValoracionGlobal() != null)
+				{
+					elementos.addItem(this.getValoracionGlobal());
+				}
+				return elementos;
+			}
+			
+			private function activarValoracionGlobal():void
+			{
+				if(this.valGlobal.selected)
+				{
+					this.numVal.enabled = true;
+				}
+				else
+				{
+					this.numVal.enabled = false;
+				}
+			}
+			
+			public override function toXML(child:Boolean=false):String
+			{
+				if(child)
+				{
+					var texto:String = '<ControlListEvaluationSet name="' + this.nomDim.text + '" dimensions="' + dimensiones.length + '"';
+					if(this.getPorcentaje() > -1)
+					{
+						texto += ' percentage="' + this.getPorcentaje() + '">\n';
+					}
+					else
+					{
+						texto += '>\n';
+					}
+					// Descripción del instrumento
+					if(this.getDescripcion())
+					{
+						texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+					}
+					var elementos:ArrayCollection = this.getElementos();
+					for(var i:int = 0; i < elementos.length; i++)
+					{
+						texto += (elementos.getItemAt(i) as ElementoInstrumento).toXML(1) + "\n";
+					}
+					texto += "</ControlListEvaluationSet>";
+					return texto;
+				}
+				else
+				{
+					var texto:String = '<ce:ControlListEvaluationSet xmlns:ce="' + Constants.CONTROL_LIST_EVALUATION_SET_NS + '"' +
+					'\nxmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+					'\nxsi:schemaLocation="' + Constants.CONTROL_LIST_EVALUATION_SET_NS + ' ' + Constants.CONTROL_LIST_EVALUATION_SET_XSD + '"' + 
+					'\nname="' + this.nomDim.text + '" dimensions="' + dimensiones.length + '">\n';
+					// Descripción del instrumento
+					if(this.getDescripcion())
+					{
+						texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+					}
+					var elementos:ArrayCollection = this.getElementos();
+					for(var i:int = 0; i < elementos.length; i++)
+					{
+						texto += (elementos.getItemAt(i) as ElementoInstrumento).toXML(1) + "\n";
+					}
+					texto += "</ce:ControlListEvaluationSet>";
+					return texto;
+				}
+			}
+			
+			private function cambiarValores(event:Event):void
+			{
+				if(valoracionGlobal != null)
+				{
+					this.valoracionGlobal.numVal.text = this.numVal.text;
+				}
+			}
+			
+			/**
+			 * Obtiene el porcentaje evitando redondeos hacia abajo
+			 */
+			public function getPorcentajeTotal():Number
+			{
+				var porcentajeTotal:Number = 0;
+				var elementos:ArrayCollection = this.getElementos();
+				for(var i:int = 0; i < elementos.length; i++)
+				{
+					porcentajeTotal += (elementos.getItemAt(i) as ElementoInstrumento).getPorcentaje();
+				}
+				return porcentajeTotal;
+			}
+			
+			/**
+			 * Establece los porcentajes por defecto para cada una de las dimensiones
+			 */
+			public function setPorcentajesPorDefecto(porcentajeElementos:int):void
+			{
+				// Si el porcentaje es menor que el valor por defecto
+				if(porcentajeElementos < Constants.PORCENTAJE_MINIMO)
+				{
+					var porcentaje:int = (100/this.getElementos().length);
+					for(var i:int = 0; i < this.getElementos().length; i++)
+					{
+						var elem:ElementoInstrumento = this.getElementos().getItemAt(i) as ElementoInstrumento;
+						elem.setPorcentaje(porcentaje);
+					}	
+				}
+			}
+			
+			/**
+			 * Devuelve la nota obtenida en la lista de control respecto a la nota de sus dimensiones
+			 */
+			public override function getNota():int
+			{
+				var nota:Number = 0;
+				var elementos:ArrayCollection = this.getElementos();
+				for(var i:int = 0; i < elementos.length; i++)
+				{
+					nota += (elementos.getItemAt(i) as ElementoInstrumento).getNota();
+				}
+				return Common.redondear(nota*100/getPorcentajeTotal());
+			}
+			
+			public override function actualizarNota(event:Event=null):void
+			{
+				this.nota = nota;
+				this.notaText.text = getNota().toString();
+			}
+			
+			public function verXML():void
+			{
+				Alert.show(this.toXML());
+			}
+			
+			public override function setPorcentaje(porcentaje:int):void
+			{
+				if(porcentaje <= 100 && porcentaje >= 0)
+				{
+					super.setPorcentaje(porcentaje);
+					this.porcentajeText.text = porcentaje.toString();
+				}
+			}
+			
+			public override function getPorcentajeText():int
+			{
+				return parseInt(porcentajeText.text);
+			}
+			
+			public override function setPorcentajeText(porcentaje:String):void
+			{
+				this.porcentajeText.text = porcentaje;
+			}
+			
+			/**
+			 * Muestra las opciones de edición cuando un instrumento se encuentra dentro de otro
+			 */
+			public override function setVistaHerramientaMixta():void
+			{
+				this.buttonAnyadir.visible = true;
+				this.buttonBorrar.visible = true;
+				this.panelPorcentaje.visible = true;
+			}
+			
+			/**
+			 * Oculta las opciones de edición cuando un instrumento se encuentra dentro de otro
+			 */
+			public override function ocultarVistaHerramientaMixta():void
+			{
+				this.buttonAnyadir.visible = false;
+				this.buttonBorrar.visible = false;
+				//this.panelPorcentaje.visible = false;
+			}
+			
+			/**
+			 * Deshabilita las opciones de edición para mostrar la ventana de evaluación
+			 */
+			public override function setVistaEvaluacion():void
+			{
+				this.nomDim.editable = false;
+				this.numDim.editable = false;
+				this.numVal.editable = false;
+				this.buttonInsertar.visible = false;
+				//this.buttonXML.visible = false;
+				this.valGlobal.enabled = false;
+				this.buttonPorcentaje.enabled = false;
+				this.porcentajeText.editable = false;
+				
+				// Eliminamos los elementos sobrantes
+				if(encabezado.contains(this.LabelDimensiones))encabezado.removeChild(this.LabelDimensiones);
+				if(encabezado.contains(this.numDim))encabezado.removeChild(this.numDim);
+				if(encabezado.contains(this.valGlobal))encabezado.removeChild(this.valGlobal);
+				if(encabezado.contains(this.LabelValores))encabezado.removeChild(this.LabelValores);
+				if(encabezado.contains(this.numVal))encabezado.removeChild(this.numVal);
+				
+				// Ajustamos la altura de los campos de texto
+				var fuente:int = this.nomDim.getStyle("fontSize");
+				//this.nomDim.setStyle("fontSize", fuente+2); 
+				this.nomDim.setStyle("fontStyle", "italic");
+				// Ponemos en negrita el título
+				this.nomDim.setStyle("fontWeight", "bold");
+				this.nomDim.validateNow();
+				// Ajustamos la anchura del título hasta un máximo
+				var altura:Number = this.nomDim.getTextField().textHeight;
+				while(this.nomDim.getTextField().textHeight > this.nomDim.getStyle("fontSize")*2 && this.nomDim.width < 600)
+				{
+					this.nomDim.width = this.nomDim.width*(1.1);
+				}
+				this.nomDim.validateNow();
+				this.nomDim.height = this.nomDim.getTextField().textHeight + this.nomDim.getLineMetrics(0).height;
+				
+				// Establecemos la vista de evalación para los elementos hijo
+				var elementos:ArrayCollection = this.getElementos();
+				for(var i:int = 0; i < elementos.length; i++)
+				{
+					(elementos.getItemAt(i) as ElementoInstrumento).setVistaEvaluacion();
+				}
+				
+				// Si es el caso, ocultamos la vista mixta
+				this.ocultarVistaHerramientaMixta();
+			}
+			
+			public override function ajustarTamanyo(evaluacion:Boolean=false):void
+			{
+				if(evaluacion)
+				{
+					this.nomDim.validateNow();
+					this.nomDim.height = this.nomDim.getTextField().textHeight + this.nomDim.getLineMetrics(0).height;
+				}
+				var elementos:ArrayCollection = this.getElementos();
+				for(var i:int = 0; i < elementos.length; i++)
+				{
+					(elementos.getItemAt(i) as ElementoInstrumento).ajustarTamanyo(evaluacion);
+				}
+			}
+			
+			public override function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				// Comprobamos el nombre
+				if(this.getName() == null || Common.trim(this.getName()) == "")
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_instrument_name") + "\n" + this.localization());
+				}
+				// Comprobamos los elementos
+				for(var i:int = 0; i < this.getElementos().length; i++)
+				{
+					(this.getElementos().getItemAt(i) as ElementoInstrumento).getAdvertencias(advertencias);
+				}
+				// Comprobamos el porcentaje
+				if(this.getHerramientaMixta() != null)
+				{
+					if(this.getPorcentaje() == 0)
+					{
+						advertencias.addItem(resourceManager.getString("myBundle", "warning_instrument_percentage") + "\n" + this.localization());
+					}
+				}
+			}
+			
+			public override function getErrores(errores:ArrayCollection):void
+			{
+				// Comprobamos si está vacía
+				if(this.getElementos() == null || this.getElementos().length == 0)
+				{
+					errores.addItem(resourceManager.getString("myBundle", "error_instrument_empty") + "\n" + this.localization());
+				}
+				// Comprobamos los atributos
+				for(var i:int = 0; i < this.getElementos().length; i++)
+				{
+					(this.getElementos().getItemAt(i) as ElementoInstrumento).getErrores(errores);
+				}
+			}
+			
+			private function localization():String
+			{
+				var localizacion:String =
+				resourceManager.getString("myBundle", "control_list_value_list") + ":" + this.getName();
+				return localizacion;
+			}
+			
+			// Revisión ******************************************************************************
+			
+			public override function revisar(infoRevision:ArrayCollection):void
+			{
+				try
+				{
+					if(infoRevision != null)
+					{
+						var elementos:ArrayCollection = this.getElementos();
+						for(var i:int = 0; i < elementos.length; i++)
+						{
+							var elemento:ElementoInstrumento = elementos.getItemAt(i) as ElementoInstrumento;
+							if(elemento is Dimension)
+							{
+								var elementosDim:ArrayCollection = (elemento as Dimension).getElementos();
+								var elementosRevision:ArrayCollection = infoRevision.getItemAt(i) as ArrayCollection;
+								for(var j:int = 0; j < elementosDim.length; j++)
+								{
+									var elementoDim:ElementoDimension = elementosDim.getItemAt(j) as ElementoDimension;
+									if(elementoDim is Subdimension)
+									{
+										var atributos:ArrayCollection = (elementoDim as Subdimension).getAtributos();
+										var atributosRevision:ArrayCollection = elementosRevision.getItemAt(j) as ArrayCollection;
+										for(var k:int = 0; k < atributos.length; k++)
+										{
+											var atributo:Atributo = atributos.getItemAt(k) as Atributo;
+											var atributoRevision:AtributoGenerico = atributosRevision.getItemAt(k) as AtributoGenerico;
+											// Revisamos
+											atributo.revisar(atributoRevision);
+										}
+									}
+									else if(elementoDim is ValoracionDimension)
+									{
+										var atributoVG:AtributoValoracionGlobal = (elementoDim as ValoracionDimension).getAtributo();
+										var atributosRevision:ArrayCollection = elementosRevision.getItemAt(j) as ArrayCollection;
+										// Revisamos
+										atributoVG.revisar(atributosRevision.getItemAt(0) as AtributoGenerico);
+									}
+								}	
+							}
+							else if(elemento is ValoracionGlobal)
+							{
+								var atributoVG:AtributoValoracionGlobal = (elemento as ValoracionGlobal).getAtributo();
+								var elementosRevision:ArrayCollection = infoRevision.getItemAt(i) as ArrayCollection;
+								// Revisamos
+								atributoVG.revisar((elementosRevision.getItemAt(0) as ArrayCollection).getItemAt(0) as AtributoGenerico);
+							}
+						}
+					}
+				}
+				catch(e:Error)
+				{
+					Alert.show(resourceManager.getString("myBundle", "error_response_format"), resourceManager.getString("myBundle", "error"));
+				}
+			}
+			
+			public override function setVistaRevision(notaRevisor:String):void
+			{
+				this.labelNotaRevision = new Label();
+				this.labelNotaRevision.text = resourceManager.getString("myBundle", "coexaminer_grade");
+				this.encabezado.addChild(labelNotaRevision);
+				this.textNotaRevision = new TextInput();
+				this.textNotaRevision.text = notaRevisor;
+				this.textNotaRevision.setStyle("backgroundColor", 0x00ae00);
+				this.textNotaRevision.setStyle("color", 0xffffff);
+				this.textNotaRevision.setStyle("fontWeight", "bold");
+				this.textNotaRevision.setStyle("textAlign", "right");
+				this.encabezado.addChild(textNotaRevision);
+				textNotaRevision.width = 40;
+				textNotaRevision.editable = false;
+				// Recorremos los elementos anidados
+				var elementos:ArrayCollection = this.getElementos();
+				for(var i:int = 0; i < elementos.length; i++)
+				{
+					var elementoR:ElementoInstrumento = elementos.getItemAt(i) as ElementoInstrumento;
+					if(elementoR is Dimension)
+					{
+						var elementosD:ArrayCollection = (elementoR as Dimension).getElementos();
+						for(var j:int = 0; j < elementosD.length; j++)
+						{
+							var elementoD:ElementoDimension = elementosD.getItemAt(j) as ElementoDimension;
+							if(elementoD is Subdimension)
+							{
+								var atributos:ArrayCollection = (elementoD as Subdimension).getAtributos();
+								for(var k:int = 0; k < atributos.length; k++)
+								{
+									(atributos.getItemAt(k) as Atributo).setVistaRevision();
+								}
+							}
+							else if(elementoD is ValoracionDimension)
+							{
+								(elementoD as ValoracionDimension).getAtributo().setVistaRevision();
+							}
+						} 	
+					}
+					else if(elementoR is ValoracionGlobal)
+					{
+						(elementoR as ValoracionGlobal).getAtributo().setVistaRevision();
+					}
+				}
+			}
+		]]>
+	</mx:Script>
+	</mx:VBox>
+</InstrumentoEvaluacion>

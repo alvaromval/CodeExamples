@@ -1,0 +1,111 @@
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+<link rel="stylesheet" type="text/css" href="../../css/style.css" title="default">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>Setting percentages</title></head>
+<body>
+<table style="width: 100%; height: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; width: 300px; background-color: white;"><big style="font-family: Calibri; font-weight: bold;">EvalCOMIX 3 Help Manual:</big><br>
+<ul style="font-family: Calibri;">
+<li><a href=".">Introduction</a></li><li style="font-weight: bold;"><a href="terminology.htm">Terminology</a></li>
+<li><a href="controllist.htm">Control list</a></li>
+<li><a href="valuelist.htm">List/set of
+values</a></li>
+<li><a href="controlvalue.htm">Control
+list+Value list</a></li>
+<li><a href="rubric.htm">Rubric</a></li>
+<li><a href="matrix.htm">Decision matrix</a></li>
+<li><a href="mix.htm">Mix tool</a></li>
+<li style="width: 250px;"><a href="modifying.htm">Modifying and instrument</a><br>
+</li>
+<li style="width: 250px;"><a href="assessment.htm">Assessment</a></li>
+<li style="width: 250px; font-weight: bold;">Setting
+elements percentages</li>
+<li style="width: 250px;"><a href="exporting.htm">Exporting an instrument to a file</a></li>
+<li style="width: 250px;"><a href="importing.htm">Importing and instrument from a file</a></li><li style="width: 250px;"><a href="people.htm">People</a></li><li style="width: 250px;"><a href="ApiEvalComix3.0.pdf">API and integration manual</a></li>
+</ul><div style="margin-left: 40px;"><a href="http://avanza.uca.es/assessmentservice/main_en.gsp"><img style="border: 0px solid ; width: 257px; height: 83px;" alt="EvalCOMIX 3" src="img/cabecera.jpg"></a></div>
+<ol style="font-family: Calibri;">
+</ol>
+</td>
+<td style="width: 665px; vertical-align: top; background-color: rgb(235, 235, 235);"><big style="font-family: Calibri; font-weight: bold;">Setting
+elements percentages:</big> <span style="font-family: Calibri;"><br>
+</span><br>
+<div style="margin-left: 40px;"><span style="font-family: Calibri;"><span style="font-weight: bold;">Modifying a percentage<br>
+</span></span><span style="font-family: Calibri;">Elements
+percentages are describe in the percentage cells&nbsp;</span><span style="font-family: Calibri;"><img style="width: 198px; height: 33px;" alt="Percentage" src="img/porcentaje0.png"></span><span style="font-family: Calibri;"> (in compound elements, like
+dimensions) and </span><span style="font-family: Calibri;"><img style="width: 57px; height: 29px;" alt="Porcentaje" src="img/porcentaje1.png"> </span><span style="font-family: Calibri;"><br>
+(in simple elements, like attributes)<br>
+<br>
+The
+percentage indicate the value of the element inside its parent element,
+i.e., we have one subdimension with 5 attributes in a List/Set of
+values:<br>
+<img style="width: 1006px; height: 375px;" alt="Percentage 0" src="img/porcentaje2.png"><br>
+Each
+attribute's percentage is set to 20% (because we have 5). But we can
+modify the percentage of any of them, &nbsp;for example, if we
+consider<br>
+one attribute more important than the others.<br>
+To do this, we set the new percentage in the </span><span style="font-family: Calibri;"><img style="width: 57px; height: 27px;" alt="Porcentaje" src="img/porcentaje8.png"> </span><span style="font-family: Calibri;">cell:<br>
+<img style="width: 1003px; height: 374px;" alt="Percentage 1" src="img/porcentaje3.png"><br>
+After setting the new value (between 0 and 100) we press </span><span style="font-family: Calibri;"><img style="width: 20px; height: 24px;" alt="Bot&oacute;n porcentaje" src="img/button_percentage.png"></span><span style="font-family: Calibri;">. Immediately, the other
+percentages are adapted to the new value:<br>
+<img style="width: 1006px; height: 374px;" alt="Percentage 3" src="img/porcentaje4.png"><br>
+We can see the rest of percentages set to 16%.<br>
+<br>
+In
+complex elements, like subidmensions, dimensions or global assessments,
+the process is the same, we introduce the new percentage and press </span><span style="font-family: Calibri;"><img style="width: 17px; height: 22px;" alt="Bot&oacute;n porcentaje" src="img/button_percentage.png"></span><br>
+<span style="font-family: Calibri;"><br style="font-weight: bold;">
+<span style="font-weight: bold;">Modifying various
+percentages at once</span><br>
+<br>
+If
+we want to modify various percentages at the same time (always between
+elements of the same type: between attributes, between subdimensions...)<br>
+I.e.
+we have three subdimensions (by default 33% each one) and we want to
+set the percentage of the first subdimension to 50% and the second to <br>
+40%. <br>
+If we do this one after one, first we set the percentage of the first
+sudbimension to 50%, and the result is:<br>
+<img style="width: 1006px; height: 660px;" alt="Percentage 4" src="img/porcentaje5.png"><br>
+<br>
+The percentage of the first subdimension has been set to 50%, and in
+the other two, has been adapted (25% each one)<br>
+<br>
+If now we set the percentage of the second subdimension to 40%, we will
+not have the result we are expecting:<br>
+<img style="width: 1006px; height: 659px;" alt="Percentage 5" src="img/porcentaje6.png"><br>
+<br>
+Percentages has been set to 40-40-20 ¿Why is this? Because the
+first subdimension had a 50% and the third a 25%, so if we maintain the
+proportion (2/1),<br>
+we will have a 40% in the first subdimension and a 20% in the third one.<br>
+So, ¿how can we do this easily?<br>
+The solution is set the desired percentages at the same time, the 50%
+in the first subdimension and the 40% in the second.<br>
+We will do this in this way:<br>
+<br>
+1. We change the percentage of the first subdimension to 50% but we do
+not press </span><span style="font-family: Calibri;"><img style="width: 20px; height: 24px;" alt="Bot&oacute;n porcentaje" src="img/button_percentage.png"> to update<br>
+2. We change the percentage of the second subdimension to 40% and now
+we can press </span><span style="font-family: Calibri;"><img style="width: 20px; height: 24px;" alt="Bot&oacute;n porcentaje" src="img/button_percentage.png"> in any of the modified
+subdimensions.</span><br>
+<span style="font-family: Calibri;"><br>
+Automatically, the percentages are set to the desired values:<br>
+<img style="width: 1007px; height: 661px;" alt="Percentage 6" src="img/porcentaje7.png"><br>
+<br>
+</span><span style="font-family: Calibri;">WARNING:
+In order to update
+changes in the database, we always have to save changes before closing
+the instrument.</span><span style="font-family: Calibri;"></span><br>
+<span style="font-family: Calibri;"><br>
+</span><span style="font-family: Calibri;"></span><span style="font-family: Calibri;"></span></div>
+</td>
+</tr>
+</tbody>
+</table>
+</body></html>

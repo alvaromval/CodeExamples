@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VentanaGenerica xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import componentes.VentanaConsultaGuardar;
+			import mx.core.Application;
+			import utilidades.Common;
+			import mx.rpc.http.HTTPService;
+			import utilidades.Constants;
+			import mx.rpc.xml.SimpleXMLDecoder;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import parser.ControladorParser;
+			import mx.rpc.events.ResultEvent;
+			
+			private var idEvaluacionRevisada:String = null;
+			
+			/**
+			 * Establece el identificador del instrumento a recuperar y el identificador de la instancia a guardar
+			 * con la evaluación realizada
+			 */
+			public function inicializar(idEvaluacion:String, idEvaluacionRevisada:String, demo:int=0):void
+			{	
+				super.init(idEvaluacion, demo);    
+				this.setVistaEvaluacion(true); 
+				this.deshabilitarExportar();
+				this.deshabilitarImportar();
+				this.deshabilitarVistaPrevia();	
+				// Establecemos el identificador de la evaluación revisada
+				this.idEvaluacionRevisada = idEvaluacionRevisada;
+	        	// Debemos obtener la estructura por http de la evaluacion
+				var servicio:HTTPService = new HTTPService();
+				servicio.url = Constants.URL_ObtenerEvaluacion + "/" + this.getIdentificador();
+				servicio.method = "POST";
+				servicio.resultFormat = "xml";
+				// Añadimos los manejadores para procesar la respuesta
+				servicio.addEventListener(ResultEvent.RESULT, manejadorObtener);
+				servicio.addEventListener(FaultEvent.FAULT, manejadorErrorObtener);
+				// Enviamos
+				servicio.send();
+			}
+			
+			private function manejadorObtener(event:ResultEvent):void
+			{
+				// El resultado es un XML
+				var response:String = event.result.toString();
+	      		var xmlDoc:XMLDocument;
+	      		try
+	        	{
+	        		// Comprobamos si el resultado es un XML
+	         		xmlDoc = new XMLDocument(response);
+	         		// Procesamos el XML
+	                var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);
+	                var resultObj:Object = decoder.decodeXML(xmlDoc);
+                	// Si la operación se ha realizado correctamente
+	                if(resultObj.assessment != null)
+	                {	
+			        	this.setEstructura(resultObj.assessment.structure);
+			        	this.getInstrumento().setVistaEvaluacion();
+			        	// Ahora obtenemos la estructura de la evaluación revisada
+			        	// Debemos obtener la estructura por http de la evaluacion
+						var servicio:HTTPService = new HTTPService();
+						servicio.url = Constants.URL_ObtenerEvaluacion + "/" + this.getIdentificadorRevisada();
+						servicio.method = "POST";
+						servicio.resultFormat = "xml";
+						// Añadimos los manejadores para procesar la respuesta
+						servicio.addEventListener(ResultEvent.RESULT, manejadorObtenerRevisada);
+						servicio.addEventListener(FaultEvent.FAULT, manejadorErrorObtener);
+						// Enviamos
+						servicio.send();
+	                }		
+	               	else if(resultObj.error != null)
+	               	{
+	                	Alert.show(resultObj.error, "Error");
+	                	this.enabled = false;
+	                }
+	         	}
+	          	catch(error:Error)
+	        	{
+	        		Alert.show(resourceManager.getString("myBundle", "error_response_format"), resourceManager.getString("myBundle", "error"));
+	        		this.enabled = false;
+	       		}
+			}
+			
+			private function manejadorErrorObtener(event:FaultEvent):void
+			{
+				Alert.show(resourceManager.getString("myBundle", "error_response"), resourceManager.getString("myBundle", "error"));
+				this.enabled = false;
+			}
+			
+			private function manejadorObtenerRevisada(event:ResultEvent):void
+			{
+				// El resultado es un XML
+				var response:String = event.result.toString();
+	      		var xmlDoc:XMLDocument;
+	      		try
+	        	{
+	        		// Comprobamos si el resultado es un XML
+	         		xmlDoc = new XMLDocument(response);
+	         		// Procesamos el XML
+	                var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);
+	                var resultObj:Object = decoder.decodeXML(xmlDoc);
+                	// Si la operación se ha realizado correctamente
+	                if(resultObj.assessment != null)
+	                {	
+			        	// Obtenemos la definición de la evaluación a revisar
+			        	var cp:ControladorParser = new ControladorParser();
+			        	var definicion:ArrayCollection = cp.getArrayDefinition(resultObj.assessment.structure);
+	                	// Realizamos la revisión
+	                	this.getInstrumento().setVistaRevision(resultObj.assessment.grade);
+	                	this.getInstrumento().revisar(definicion);
+	                }		
+	               	else if(resultObj.error != null)
+	               	{
+	                	Alert.show(resultObj.error, "Error");
+	                	this.enabled = false;
+	                }
+	         	}
+	          	catch(error:Error)
+	        	{
+	        		Alert.show(resourceManager.getString("myBundle", "error_response_format"), resourceManager.getString("myBundle", "error"));
+	        		this.enabled = false;
+	       		}
+			}
+			
+			/**
+			 * Añade un instrumento de evaluación a la interfaz visual del objeto actual
+			 */
+			public override function anyadirInstrumento(instrumento:InstrumentoEvaluacion):void
+			{
+				super.anyadirInstrumento(instrumento);
+			}
+			
+			protected override function guardar(event:Event=null):void
+			{
+				if(event)
+				{
+					if(event.currentTarget is VentanaConsultaGuardar)
+					{
+						var vcg:VentanaConsultaGuardar = event.currentTarget as VentanaConsultaGuardar;
+						if(vcg.aceptar())
+						{
+							// Guardamos la evaluación realizada
+							var servicio:HTTPService = new HTTPService();
+							servicio.url = Constants.URL_GuardarEvaluacion + "/" + this.getIdentificador();
+							servicio.request = {structure:this.getInstrumento().toXML(), grade:this.getInstrumento().getNota()};
+							servicio.method = "POST";
+							servicio.resultFormat = "xml";
+							// Añadimos los manejadores para procesar la respuesta
+							servicio.addEventListener(ResultEvent.RESULT, manejadorGuardar);
+							servicio.addEventListener(FaultEvent.FAULT, manejadorErrorGuardar);
+							// Enviamos
+							servicio.send();
+						}
+						else if(vcg.verErrores())
+						{
+							this.verEstadoInstrumento();
+						}
+					}	
+				}
+				else
+				{
+					// Guardamos la evaluación realizada
+					var servicio:HTTPService = new HTTPService();
+					servicio.url = Constants.URL_GuardarEvaluacion + "/" + this.getIdentificador();
+					servicio.request = {structure:this.getInstrumento().toXML(), grade:this.getInstrumento().getNota()};
+					servicio.method = "POST";
+					servicio.resultFormat = "xml";
+					// Añadimos los manejadores para procesar la respuesta
+					servicio.addEventListener(ResultEvent.RESULT, manejadorGuardar);
+					servicio.addEventListener(FaultEvent.FAULT, manejadorErrorGuardar);
+					// Enviamos
+					servicio.send();
+				}
+			}
+			
+			private function manejadorGuardar(event:ResultEvent):void
+			{
+				// El resultado es un XML
+				var response:String = event.result.toString();
+	      		var xmlDoc:XMLDocument;
+	      		try
+	        	{
+	        		// Comprobamos si el resultado es un XML
+	         		xmlDoc = new XMLDocument(response);
+	         		// Procesamos el XML
+	                var decoder:SimpleXMLDecoder = new SimpleXMLDecoder(true);
+	                var resultObj:Object = decoder.decodeXML(xmlDoc);
+                	// Rellenamos un array con los cursos
+                	// Si la operación se ha realizado correctamente
+	                if(resultObj.assessment != null)
+	                {	
+	                	// Mostramos el mensaje de éxito
+	                	Alert.show(resourceManager.getString("myBundle", "success_update"), resourceManager.getString("myBundle", "success"));
+	                	// Redireccionamos si se nos ha pasado una url como parámetro
+	                	if(Application.application.parameters.url)
+	                	{
+	                		var url:String = unescape(Application.application.parameters.url);
+				        	var u:URLRequest = new URLRequest(url);
+				        	u.method = "POST";
+				        	// Creamos las variables a enviar
+				        	var variables:URLVariables = new URLVariables();
+				        	variables.identifier = this.getIdentificador();
+				        	variables.grade = this.getInstrumento().getNota();
+				        	variables.description = this.getInstrumento().getDescripcion();
+				        	variables.type = this.getInstrumento().getTipo();
+				        	u.data = variables;
+				        	// Redireccionamos
+							navigateToURL(u,"_self");
+	                	}
+	                }	
+	               	else if(resultObj.error != null)
+	               	{
+	                	Alert.show(resultObj.error, "Error");
+	                }
+	         	}
+	          	catch(error:Error)
+	        	{
+	        		Alert.show(resourceManager.getString("myBundle", "error_response_format"), resourceManager.getString("myBundle", "error"));
+	        		this.enabled = false;
+	       		}
+			}
+			
+			private function manejadorErrorGuardar(event:FaultEvent):void
+			{
+				Alert.show(resourceManager.getString("myBundle", "error_response"), resourceManager.getString("myBundle", "error"));
+				this.enabled = false;
+			}
+			
+			public function getIdentificadorRevisada():String
+			{
+				return this.idEvaluacionRevisada;
+			}
+		]]>
+	</mx:Script>
+</VentanaGenerica>

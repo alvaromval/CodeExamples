@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" height="45" verticalAlign="top" borderStyle="solid" horizontalGap="2" borderSides="bottom" alpha="1.0" borderColor="#FFFFFF" backgroundAlpha="0.0" xmlns:componentes="componentes.*">
+	<mx:TextInput id="porcentajeText" width="33" maxChars="3" backgroundColor="#000000" color="#00F00F" fontFamily="Verdana" fontSize="10" textAlign="right" fontWeight="bold" restrict="/0-9/"/>
+	<mx:VBox height="100%" verticalGap="2" width="18" verticalAlign="top">
+		<mx:Button id="buttonPorcentaje" width="18" icon="@Embed(source='../img/iconPrctg.gif')" cornerRadius="0" click="insertarPorcentaje(1, event);"/>
+		<componentes:ButtonComentario id="buttonComentarios" visible="false"/>
+	</mx:VBox>
+	<mx:TextArea width="235" id="nombre" backgroundColor="#FFFFFF" change="redimensionar()"/>
+	<mx:VBox height="100%" verticalGap="0" borderStyle="none" borderSides="right" borderColor="#FFFFFF">
+		<mx:HBox width="100%" horizontalGap="0" id="valoresBox">
+		</mx:HBox>
+		<mx:Canvas width="100%" id="comentariosBox">
+		</mx:Canvas>
+	</mx:VBox>
+	<mx:RadioButtonGroup id="valor"/>
+	<mx:initialize>
+		<![CDATA[
+			this.valor.addEventListener(Event.CHANGE, actualizarNota);
+		]]>
+	</mx:initialize>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import utilidades.Common;
+			import mx.controls.RadioButton;
+			use namespace mx_internal;
+			
+			private var numValores:int = 0; // Número de valores que puede tomar el atributo
+			private var porcentaje:Number = -1;
+			private var valGlobal:ValoracionGlobal = null;
+			private var valDimension:ValoracionDimension = null;
+			
+			public function setName(nombre:String):void
+			{
+				this.nombre.text = nombre;
+			}
+			
+			public function getName():String
+			{
+				return this.nombre.text;
+			}
+			
+			/**
+			 * Función que inserta un número determinado de valores en un atributo
+			 */
+			public function insertar(valores:int, valoresArr:Array):void
+			{
+				this.numValores = valores;
+				for(var i:int = 0; i < valores; i++)
+				{
+					var rb:RadioButton = new RadioButton();
+					this.valoresBox.addChild(rb);
+					//rb.percentWidth = 100;
+					rb.width = 100;
+					rb.minWidth = 100;
+					rb.width = (valoresArr[i] as TextInput).width;
+					rb.value = i;
+					rb.groupName = "valor";
+					// Por defecto seleccionamos el primero
+					if(i == 0)
+					{
+						rb.selected = true;
+					}
+				}	
+			}
+			
+			public function insertarPorcentaje(porcent:int, event:MouseEvent=null):void
+			{
+				if(event != null)
+				{
+					if(parseInt(this.porcentajeText.text) < 100)
+					{
+						this.setPorcentaje(100);
+						Alert.show(resourceManager.getString("myBundle", "warning_percentage"), resourceManager.getString("myBundle", "warning"));
+			 		}
+				}
+			}
+			
+			public function anyadirCasillaValor(index:int):void
+			{
+				var rb:RadioButton = new RadioButton();
+				this.valoresBox.addChild(rb);
+				//rb.percentWidth = 100;
+				rb.width = 100;
+				rb.value = index;
+				rb.groupName = "valor";
+			}
+			
+			public function eliminarCasillaValor(index:int):void
+			{
+				if(valoresBox.getChildAt(index) is RadioButton)
+				{
+					var rb:RadioButton = valoresBox.getChildAt(index) as RadioButton;
+					if(rb.selected)
+					{
+						(this.valoresBox.getChildAt(0) as RadioButton).selected = true;
+					}
+				}
+				this.valoresBox.removeChildAt(index);
+			}
+			
+			public function setValoracionGlobal(valGlobal:ValoracionGlobal):void
+			{
+				this.valGlobal = valGlobal;
+			}
+			
+			public function getValoracionGlobal():ValoracionGlobal
+			{
+				return this.valGlobal;
+			}
+			
+			public function getValoracionDimension():ValoracionDimension
+			{
+				return this.valDimension;
+			}
+			
+			public function setValoracionDimension(valDimension:ValoracionDimension):void
+			{
+				this.valDimension = valDimension;
+			}
+			
+			public function getValor():int
+			{
+				return parseInt(valor.selection.value.toString());
+			}
+			
+			private function redimensionar():void
+			{
+				//if(this.nombre.textWidth
+				//this.nombre.width = this.nombre.textWidth;
+			}
+			
+			/**
+			 * Devuelve la nota obtenida en el atributo respecto al número de valores y al porcentaje asignado
+			 * nota= (valor_seleccionado/num_valores)*porcentaje
+			 */
+			public function getNota():Number
+			{
+				var nota:Number = 0;
+				if(valor.selection != null)
+				{
+					if(parseInt(valor.selection.value.toString()) > 0)
+					{
+						var aux:Number = 0;
+						if(this.valGlobal != null)
+						{
+							aux = parseFloat(valor.selection.value.toString())/(this.valGlobal.getValores().length-1);
+						}
+						else if(this.valDimension != null)
+						{
+							aux = parseFloat(valor.selection.value.toString())/(this.valDimension.getValores().length-1);
+						}
+						nota = aux*this.getPorcentaje();
+					}
+				}
+				else
+				{
+					for(var i:int = 0; i < this.valoresBox.numChildren; i++)
+					{
+						if(valoresBox.getChildAt(i) is RadioButton)
+						{
+							if(i > 0)
+							{
+								if((valoresBox.getChildAt(i) as RadioButton).selected)
+								{
+									if(this.valGlobal != null)
+									{
+										var aux:Number = i/(this.valGlobal.getValores().length - 1);
+										nota = aux*this.getPorcentaje();
+										return nota;
+									}
+									else if(this.valDimension != null)
+									{
+										var aux:Number = i/(this.valDimension.getValores().length - 1);
+										nota = aux*this.getPorcentaje();
+										return nota;
+									}
+								}
+							}
+						}
+					}
+				}
+				//Alert.show("Nota Atributo: " + nota);
+				return nota;
+			}
+			
+			public function setPorcentaje(porcentaje:int):void
+			{
+				if(porcentaje <= 100 && porcentaje >= 0)
+				{
+					this.porcentaje = porcentaje;
+					this.porcentajeText.text = porcentaje.toString();
+				}
+			}
+			
+			public function getPorcentaje():Number
+			{
+				return this.porcentaje;
+			}
+			
+			/**
+			 * Establece la selección del atributo
+			 */
+			public function selectValue(index:int):void
+			{
+				(this.valoresBox.getChildAt(index) as RadioButton).selected = true;
+			}
+			
+			private function actualizarNota(event:Event=null):void
+			{
+				if(this.valGlobal != null)
+				{
+					valGlobal.actualizarNota();
+				}
+				else if(this.valDimension != null)
+				{
+					valDimension.actualizarNota();
+				}
+			}
+			
+			/**
+			 * Función que transforma la clase en un objeto XML
+			 */
+			public function toXML(nivel:int):String
+			{
+				// Construimos el texto XML
+				var texto:String = Common.tabs(nivel) + '<Attribute name="' + this.nombre.text + '" percentage="' + this.getPorcentaje() + '">' + valor.selection.value + '</Attribute>';
+				// Lo devolvemos en forma de objeto XML
+				return texto;
+			}
+			
+			public function ajustarLongitud(longitud:int, index:int):void
+			{
+				for(var i:int = 0; i < valoresBox.getChildren().length; i++)
+				{
+					if(i == index)
+					{
+						valoresBox.getChildAt(i).width = longitud;
+					}
+				}	
+			}
+			
+			/**
+			 * Deshabilita las opciones de edición para mostrar la ventana de evaluación
+			 */
+			public function setVistaEvaluacion():void
+			{
+				//this.buttonAnyadir.visible = false;
+				//this.buttonBorrar.visible = false;
+				this.buttonPorcentaje.enabled = false;
+				this.porcentajeText.editable = false;
+				this.nombre.editable = false;
+				this.nombre.validateNow();
+				this.nombre.height = this.nombre.getTextField().textHeight + this.nombre.getLineMetrics(0).height;
+			}
+			
+			public function ajustarAltura():void
+			{
+				this.nombre.validateNow();
+				this.nombre.height = this.nombre.getTextField().textHeight + this.nombre.getLineMetrics(0).height;
+			}
+			
+			public function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				if(this.getName() == null || Common.trim(this.getName()) == "")
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_attribute_name") + "\n" + this.localization());
+				}
+			}
+			
+			public function getErrores(errores:ArrayCollection):void
+			{
+				
+			}
+			
+			private function localization():String
+			{
+				var localizacion:String = null;
+				if(this.getValoracionDimension() != null)
+				{
+					localizacion = 
+					resourceManager.getString("myBundle", "attribute") + this.getName() + " at" +
+					"\n" + resourceManager.getString("myBundle", "dimension_assessment_text") + " at" +
+					"\n" + resourceManager.getString("myBundle", "dimension") + this.getValoracionDimension().getDimension().getName() + " at" +
+					"\n" + resourceManager.getString("myBundle", "control_list_value_list") + ":" + this.getValoracionDimension().getDimension().getInstrumento().getName();
+				}
+				else if(this.getValoracionGlobal() != null)
+				{
+					localizacion = 
+					resourceManager.getString("myBundle", "attribute") + this.getName() + " at" +
+					"\n" + resourceManager.getString("myBundle", "global_assessment_text") + " at" +
+					"\n" + resourceManager.getString("myBundle", "control_list_value_list") + ":" + this.getValoracionGlobal().getInstrumento().getName();
+				}
+				return localizacion;
+			}
+			
+			// Revisión ****************************************************************************************
+			public function setComentario(comentario:String):void
+			{
+				this.buttonComentarios.setComentario(comentario);
+			}
+			
+			public function getComentario():String
+			{
+				return this.buttonComentarios.getComentario();
+			}
+			
+			public function revisar(atr:AtributoGenerico):void
+			{
+				// Marcamos en otro color la selección del revisor
+				var seleccion:int = atr.getIndex();
+				if(seleccion > -1)
+				{
+					var valores:Array = this.valoresBox.getChildren();
+					var rb:RadioButton = valores[seleccion] as RadioButton;
+					var posicion:int = rb.x;
+					rb.setStyle("fillColors", [0x00ff00, 0x00ff00]);
+					rb.setStyle("fillAlphas", [0.6,0.3]);
+				}
+				// Añadimos el comentario, si lo hay, del revisor (coevaluador) en el elemento marcado
+				if(atr.getComentario())
+				{
+					var bc:ButtonComentario = new ButtonComentario();
+					bc.setCoevaluador(true);
+					comentariosBox.addChild(bc);
+					bc.x = posicion;
+					bc.setComentario(atr.getComentario());
+				}
+			}
+			
+			public function setVistaRevision():void
+			{
+				this.buttonComentarios.visible = true;
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

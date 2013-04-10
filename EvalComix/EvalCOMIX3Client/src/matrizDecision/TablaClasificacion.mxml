@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalGap="0" verticalGap="0" horizontalAlign="center" borderStyle="none" borderColor="#FFFFFF" borderThickness="2" backgroundColor="#F1F2F1">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.containers.HBox;
+			import mx.controls.Label;
+			import mx.collections.ArrayCollection;
+
+			public function inicializar(resultados:ArrayCollection, nombresCompetencias:ArrayCollection):void
+			{
+				var numCompetencias:int = nombresCompetencias.length;
+				// Primero añadimos los títulos
+				var hb:HBox = new HBox();
+				this.addChild(hb);
+				hb.setStyle("horizontalGap", 0);
+				hb.percentWidth = 100;
+				hb.height = 30;
+				// Añadimos el titulo para las competencias
+				var et:ElementoTabla = new ElementoTabla();
+				hb.addChild(et);
+				et.setText(resourceManager.getString("myBundle", "competences"));
+				et.setNegrita();
+				// Añadimos los títulos para los criterios y aprovechamos para guardar los resultados
+				var resultadosArray:ArrayCollection = new ArrayCollection();
+				for(var i:int = 0; i < resultados.length; i++)
+				{
+					et = new ElementoTabla();
+					hb.addChild(et);
+					et.setText((resultados.getItemAt(i) as TituloCriterio).getLetra() + "-" + (resultados.getItemAt(i) as TituloCriterio).getName());//getLetra());
+					et.setNegrita();
+					resultadosArray.addItem((resultados.getItemAt(i) as TituloCriterio).getResultados());
+				}
+				// Con los resultados, obtenemos los totales y la clasificación, que necesitaremos más adelante
+				var totales:Array = new Array();
+				var totalesAux:Array = new Array();
+				var clasificacion:Array = new Array();
+				for(var i:int = 0; i < numCompetencias; i++)
+				{
+					totales.push(0);
+					totalesAux.push(0);
+					clasificacion.push(0);
+				}
+				for(var i:int = 0; i < numCompetencias; i++)
+				{
+					for(var j:int = 0; j < resultadosArray.length; j++)
+					{
+						totales[i] += (resultadosArray.getItemAt(j) as Array)[i];
+						totalesAux[i] = totales[i]; 
+					}
+				}
+				totalesAux.sort(sortNumericDescending);
+				// Obtenemos la clasificación, utilizando los totales
+				for(var i:int = 0; i < totales.length; i++)
+				{
+					for(var j:int = 0; j < totalesAux.length; j++)
+					{
+						if(totales[i] == totalesAux[j])
+						{
+							if(clasificacion[i] == 0)
+							{
+								clasificacion[i] = j+1;
+								// Comprobamos si el orden no está repetido
+								for(var k:int = 0; k < clasificacion.length; k++)
+								{
+									if(k != i)
+									{
+										if(clasificacion[k] == clasificacion[i])
+										{
+											clasificacion[i]++;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				et = new ElementoTabla();
+				hb.addChild(et);
+				et.setText(resourceManager.getString("myBundle", "totals"));
+				et.setNegrita();
+				et = new ElementoTabla();
+				hb.addChild(et);
+				et.setText(resourceManager.getString("myBundle", "classification"));
+				et.setNegrita();
+				// Ahora ponemos el contenido
+				for(var i:int = 0; i < numCompetencias; i++)
+				{
+					// Añadimos el contenedor horizontal
+					var hb:HBox = new HBox();
+					this.addChild(hb);
+					hb.setStyle("horizontalGap", 0);
+					hb.percentWidth = 100;
+					hb.height = 30;
+					// Añadimos en orden, nºcompetencia, resultados criterio para la competencia, totales, clasificación
+					// NºCompetencia
+					var et:ElementoTabla = new ElementoTabla();
+					hb.addChild(et);
+					//et.setText((i+1).toString());
+					et.setText((i+1) + "-" + nombresCompetencias.getItemAt(i));
+					et.setNegrita();
+					// Resultado de la competencia para cada criterio
+					for(var j:int = 0; j < resultadosArray.length; j++)
+					{
+						et = new ElementoTabla();
+						hb.addChild(et);
+						et.setText((resultadosArray.getItemAt(j) as Array)[i].toString());
+					}
+					// Añadimos los totales para cada competencia
+					et = new ElementoTabla();
+					hb.addChild(et);
+					et.setText(totales[i].toString());
+					// Añadimos finalmente la clasificacion
+					et = new ElementoTabla();
+					hb.addChild(et);
+					et.setText(clasificacion[i].toString());
+				}
+			}
+			
+			private function sortNumericDescending(a:int, b:int):int
+			{
+				if(a > b) 
+				{
+	        		return -1;
+		    	} 
+		    	else if(a < b) 
+		    	{
+		    	    return 1;
+		    	} 
+		    	else  
+		    	{
+    	    		return 0;
+		    	}
+			}
+		]]>
+	</mx:Script>
+	
+</mx:VBox>

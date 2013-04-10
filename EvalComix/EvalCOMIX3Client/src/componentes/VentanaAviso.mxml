@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300" verticalAlign="bottom" horizontalAlign="center" xmlns:ns1="editorVisual.componentes.*" title="@Resource(bundle='myBundle', key='warning')" layout="vertical">
+	<mx:VBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<mx:Image source="img/iconWarning.png"/>
+		<mx:Text id="mensajeText" text="Label" x="91" y="116" height="90" width="100%" textAlign="center"/>
+	</mx:VBox>
+	<mx:Canvas width="100%" height="30">
+		<mx:Button id="buttonAceptar" label="@Resource(bundle='myBundle', key='accept')" click="cerrar(event);" x="4" y="4" cornerRadius="0"/>
+		<mx:Button id="buttonCancelar" label="@Resource(bundle='myBundle', key='cancel')" click="cerrar(event);" x="293" y="4" cornerRadius="0"/>
+	</mx:Canvas>
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+		
+			private var acept:Boolean = false;
+			
+			public function setMensaje(mensaje:String):void
+			{
+				this.mensajeText.text = mensaje;
+			}
+			
+			private function cerrar(event:MouseEvent):void
+			{
+				if(event.currentTarget == buttonAceptar)
+				{
+					this.acept = true;
+				}
+				else
+				{
+					this.acept = false;
+				}
+				PopUpManager.removePopUp (this);
+			}
+			
+			public function aceptar():Boolean
+			{
+				return this.acept;
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

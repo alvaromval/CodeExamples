@@ -1,0 +1,121 @@
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+<link rel="stylesheet" type="text/css" href="../../css/style.css" title="default">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>Matriz de decisi&oacute;n</title></head><body>
+<table style="width: 100%; height: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; width: 300px; background-color: white;"><big style="font-family: Calibri; font-weight: bold;">Manual de ayuda de EvalCOMIX 3:</big><br>
+<ol style="font-family: Calibri;">
+</ol>
+<ul style="font-family: Calibri;">
+<li><a href=".">Introducci&oacute;n</a></li><li><a href="terminologia.htm">Terminolog&iacute;a</a></li>
+<li><a href="listadecontrol.htm">Lista de
+control</a></li>
+<li><a href="escaladevaloracion.htm">Escala
+de valoraci&oacute;n</a></li>
+<li><a href="listaescala.htm">Lista de
+control + Escala de valoraci&oacute;n</a></li>
+<li><a href="rubrica.htm">R&uacute;brica</a></li>
+<li style="font-weight: bold;">Matriz de decisi&oacute;n</li>
+<li><a href="mixta.htm">Herramienta mixta</a></li>
+<li style="width: 250px;"><a href="modificacion.htm">Modificaci&oacute;n de un instrumento ya
+creado</a><br>
+</li>
+<li style="width: 250px;"><a href="valoracion.htm">Valoraci&oacute;n</a></li>
+<li style="width: 250px;"><a href="porcentajes.htm">Asignaci&oacute;n de porcentajes a los
+elementos</a></li>
+<li style="width: 250px;"><a href="exportar.htm">Exportar
+un instrumento ya creado</a></li>
+<li style="width: 250px;"><a href="importar.htm">Importar
+un instrumento desde un fichero</a></li><li style="width: 250px;"><a href="participantes.htm">Participantes</a></li><li style="width: 250px;"><a href="ApiEvalComix3.0.pdf">API de EvalCOMIX, manual de integraci&oacute;n</a></li>
+</ul><div style="margin-left: 40px;"><a href="http://avanza.uca.es/assessmentservice"><img style="border: 0px solid ; width: 257px; height: 83px;" alt="EvalCOMIX 3" src="img/cabecera.jpg"></a></div>
+<ol style="font-family: Calibri;">
+</ol>
+</td>
+<td style="width: 665px; vertical-align: top; background-color: rgb(235, 235, 235);"><big style="font-family: Calibri; font-weight: bold;">Matriz de
+decisi&oacute;n:</big><span style="font-family: Calibri;"><br>
+Una matriz de decisi&oacute;n no es un instrumento de evaluaci&oacute;n como tal. Es
+un instrumento que sirve para elegir una opci&oacute;n<br>
+entre una serie de opciones posibles, normalmente m&aacute;s de dos.
+Ponderando por igual todas.<br>
+</span><br>
+<div style="margin-left: 40px;"><span style="font-family: Calibri;"><span style="font-weight: bold;">Creaci&oacute;n de una matriz de
+decisi&oacute;n:</span><br>
+<br>
+Para crear una matriz de decisi&oacute;n se han de seguir
+los siguientes
+pasos:<br>
+<br>
+Una matriz de decisi&oacute;n vac&iacute;a presenta el siguiente
+aspecto:<br>
+<img style="width: 811px; height: 90px;" alt="Matriz de decisi&oacute;n vac&iacute;a" src="img/matrix0.png"><br>
+En la matriz de decisi&oacute;n tenemos tres campos: t&iacute;tulo y n&uacute;mero de
+competencias y actores.<br>
+- T&iacute;tulo: el t&iacute;tulo del instrumento<br>
+-
+N&ordm; de competencias: Es el n&uacute;mero de opciones a ponderar, p.ej. si
+estuvieramos ponderando la compra de un coche, ser&iacute;an los distintos
+coches<br>
+entre los que elegir.<br>
+- N&ordm; de actores: Es el n&uacute;mero de
+personas que participan en la decisi&oacute;n, cada uno tendr&aacute; que ponderar
+las opciones y finalmente ganar&aacute; la opci&oacute;n que<br>
+en el c&oacute;mputo global haya sido marcada m&aacute;s veces.<br>
+<br>
+Como ejemplo vamos a introducir tres competencias y dos actores y
+pulsamos</span><span style="font-family: Calibri;">
+<img style="width: 32px; height: 23px;" alt="Bot&oacute;n insertar" src="img/insert_button.png">.</span><span style="font-family: Calibri;"><br>
+<img style="width: 1192px; height: 320px;" alt="Matriz con 3 competencias y 2 actores" src="img/matrix1.png"><br>
+<br>
+Al
+ser un poco abstracto, vamos a concretar el ejemplo. En este caso
+tenemos tres coches entre los que elegir: Renault, Fiat y Ford. Y dos
+actores<br>
+Pedro y Mar&iacute;a:<br>
+<img style="width: 1192px; height: 321px;" alt="Matriz concreta" src="img/matrix2.png"><br>
+Por defecto aparecen marcadas las primeras opciones.<br>
+<br>
+Vamos a rellenar la matriz con los valores que resulten de ponderar
+nuestras tres opciones:<br>
+<img style="width: 1194px; height: 317px;" alt="Matriz concreta rellena" src="img/matrix3.png"><br>
+Vamos a ver los resultados de Pedro:<br>
+Para
+la primera casilla ha marcado 2 frente al 1, es decir, elige Fiat
+frente a Renault, y tambi&eacute;n ha marcado 1 frente a 3, elige Renault
+frente a Ford.<br>
+Para la segunda casilla ha marcado 2 frente a 3, elige Fiat frente a
+Ford.<br>
+<br>
+Los resultados de Mar&iacute;a son los siguientes:<br>
+Para
+la primera casilla ha marcado 1 frente a 2, es decir Renault por encima
+de Fiat, y tambi&eacute;n 3 frente a 1, o lo que es lo mismo, elige Ford
+frente a Renault.<br>
+Para la segunda casilla ha marcado 3 frente a 2, elije Ford frente a
+Fiat.<br>
+<br>
+La
+tercera o &uacute;ltima casilla (en este caso la de Ford) siempre aparecer&aacute;
+vac&iacute;a porque la opci&oacute;n 3, ya aparece en el resto de casillas el mismo
+n&uacute;mero de veces que <br>
+las opciones 1 y 2.<br>
+<br>
+Ahora vamos a ver los resultados para lo que presionaremos el bot&oacute;n
+"Resultados" que se encuentra debajo de la matriz:<br>
+<img style="width: 1198px; height: 475px;" alt="Matriz y resultados" src="img/matrix4.png"><br>
+Los
+resultados arrojan que ha habido un triple empate entre los tres coches
+(como se pod&iacute;a intuir en el momento de analizar las opciones elegidas)
+aunque podemos<br>
+ver como el actor A (Pedro) ha marcado marcado m&aacute;s
+veces la opci&oacute;n de Fiat, mientras que el actor B (Mar&iacute;a) ha marcado m&aacute;s
+Ford. Pero por contra como ambos han<br>
+elegido 1 vez Renault, ha habido un triple empate.<br><br></span><span style="font-family: Calibri;">IMPORTANTE: Para que los cambios realizados queden almacenados, siempre debemos presionar el bot&oacute;n de guardado.</span><br><span style="font-family: Calibri;">
+</span><span style="font-family: Calibri;"></span></div>
+</td>
+</tr>
+</tbody>
+</table>
+</body></html>

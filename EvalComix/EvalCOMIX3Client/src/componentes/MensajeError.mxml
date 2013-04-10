@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" borderStyle="solid">
+	<mx:Image source="img/iconError.png"/>
+	<mx:Text id="mensajeText" text="Text" minHeight="40" width="400"/>
+	<mx:Script>
+		<![CDATA[
+			use namespace mx_internal;
+		
+			private var mensaje:String = null;
+			
+			public function setMensaje(mensaje:String):void
+			{
+				this.mensajeText.text = mensaje;
+			}
+			
+			public function getAltura():Number
+			{
+				this.mensajeText.validateNow();
+				return mensajeText.getTextField().textHeight + 10;
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" backgroundGradientAlphas="[1.0, 1.0]" backgroundGradientColors="[#FFFFFF, #FFFFFF]">
+	<mx:Metadata>
+        [ResourceBundle("myBundle")]
+    </mx:Metadata>
+	<mx:Canvas id="container" x="0" y="0" width="100%" height="100%" backgroundColor="#FFFFFF">
+    </mx:Canvas>
+    <mx:Script>
+    	<![CDATA[
+    		import parser.ParserEvaluationSet;
+    		import mx.managers.PopUpManager;
+    		import mx.controls.Alert;
+    		import utilidades.Common;
+    		
+    		private var ventana:VentanaGenerica = null;
+    		
+        	private function init():void 
+        	{
+        		// First we load the crossdomain.xml file
+        		try
+        		{
+	        		Security.allowDomain("*");
+	                // The FlashVars
+	                var params:Object = this.parameters;
+	                // Si nos han pasado un parámetro con el lenguaje
+	                if(params.lang)
+	                {
+	                	var language:String = params.lang;
+	                	if(language.substr(0, 3) == "en_")
+	                	{
+	                		language = "en_US";
+	                	}
+	                	else if(language.substr(0, 3) == "es_")
+	                	{
+	                		language = "es_ES";
+	                	}
+	                	else
+	                	{
+	                		language = "en_US";
+	                	}
+	                	for(var i:int = 0; i < resourceManager.localeChain.length; i++)
+	                	{
+	                		if(language == resourceManager.localeChain[i])
+	                		{
+	                			resourceManager.localeChain = [language];
+	                		}	
+	                	}
+	                }
+	                // Si ha sido una llamada para la gestión de instrumentos (creación, edición)
+	               	if(params.controller == "instrument")
+	               	{
+	               		// Vamos a crear un nuevo instrumento de evaluación
+	               		if(params.call == "create")
+	               		{
+	               			if(params.identifier != null && params.type != null) //&& Common.comprobarTipoInstrumento(params.type.toString()))
+	               			{
+	               				// Creamos una ventana de creación
+	               				var vc:VentanaCreacion = new VentanaCreacion();
+	               				// La añadimos a la aplicación
+	               				setVentana(vc);
+	               				vc.inicializar(params.identifier, params.type);
+	               			}
+	               			else if(params.identifier != null)
+	               			{
+								var vs:VentanaSeleccion = VentanaSeleccion(PopUpManager.createPopUp(this, VentanaSeleccion, true));
+								if(params.demo)
+								{
+									vs.inicializar(params.identifier, 1);
+								}
+								else
+								{
+									vs.inicializar(params.identifier);
+								}
+								PopUpManager.centerPopUp(vs);
+	               			}
+	               			else
+	               			{
+	               				Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               			}
+	               		}
+	               		// Vamos a abrir un instrumento de evaluación ya creado
+	               		else if(params.call == "open")
+	               		{
+	               			if(params.identifier)
+	               			{
+	               				// Creamos una ventana de edición
+	               				var ve:VentanaEdicion = new VentanaEdicion();
+	              				// La añadimos a la aplicación
+	               				this.setVentana(ve);
+	               				// Le pasamos el id del instrumento existente
+	               				ve.inicializar(params.identifier);
+	               			}
+	               			else
+	               			{
+	               				Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               			}
+	               		}
+	               		else if(params.call == "view")
+	               		{
+	               			// Creamos una ventana de consulta
+               				var vco:VentanaConsulta = new VentanaConsulta();
+              				// La añadimos a la aplicación
+               				this.setVentana(vco);
+               				// Le pasamos el id del instrumento existente
+               				vco.inicializar(params.identifier, params.controller);
+	               		}
+	               		else
+	               		{
+	               			Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               		}
+	               	}
+	               	// Si ha sido una llamada para realizar una evaluación
+	               	else if(params.controller == "assessment")
+	               	{
+	               		if(params.call == "create" || params.call == "open")
+	               		{
+	               			if(params.identifier)
+	               			{
+		               			// Creamos una ventana de evaluación
+		               			var vv:VentanaEvaluacion = new VentanaEvaluacion();
+		               			// La añadimos a la aplicación
+		               			this.setVentana(vv);
+		               			// Le pasamos el id del instrumento y el id que tendrá la nueva evaluación
+		               			vv.inicializar(params.identifier);
+	               			}
+	               			else
+	               			{
+	               				Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               			}
+	               		}
+	               		else if(params.call == "view")
+	               		{
+	               			if(params.identifier)
+	               			{
+		               			// Creamos una ventana de consulta
+	               				var vco:VentanaConsulta = new VentanaConsulta();
+	              				// La añadimos a la aplicación
+	               				this.setVentana(vco);
+	               				// Le pasamos el id del instrumento existente
+	               				vco.inicializar(params.identifier, params.controller);
+               				}
+	               			else
+	               			{
+	               				Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               			}
+	               		}
+	               		else if(params.call == "review")
+	               		{
+	               			if(params.identifier && params.identifierReviewed)
+	               			{
+		               			// Creamos una ventana de consulta
+	               				var vr:VentanaRevision = new VentanaRevision();
+	              				// La añadimos a la aplicación
+	               				this.setVentana(vr);
+	               				// Le pasamos el id del instrumento existente
+	               				if(params.demo)
+								{
+									vr.inicializar(params.identifier, params.identifierReviewed, 1);
+								}
+								else
+								{
+									vr.inicializar(params.identifier, params.identifierReviewed);
+								}
+               				}
+	               			else
+	               			{
+	               				Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               			}
+	               		}
+	               		else
+	               		{
+	               			Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+	               		}
+	               	}
+	               	else
+	               	{
+	               		Alert.show(resourceManager.getString("myBundle", "error_parameters"), resourceManager.getString("myBundle", "error"));
+               		}
+				}
+				catch(e:Error)
+				{
+  					//Alert.show("ID: " + e.errorID + "Mensaje: " + e.message);
+				}
+            }
+            
+            public function setVentana(ventana:VentanaGenerica):void
+            {
+            	this.ventana = ventana;
+            	this.container.addChild(ventana);
+            }
+            
+            public function getVentana():VentanaGenerica
+            {
+            	return this.ventana;
+            }
+            
+            public function eliminarVentana():void
+            {
+            	this.container.removeChild(ventana);
+            	this.ventana = null;
+            }
+        ]]>
+    </mx:Script>
+</mx:Application>

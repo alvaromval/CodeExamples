@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" verticalGap="2" backgroundColor="#D2E7C9" fontWeight="bold" borderColor="#0C6D05" color="#0C4A15">
+	<mx:VBox width="100%" backgroundColor="#6B8F6B" horizontalAlign="left">
+		<mx:HBox width="100%" horizontalGap="2" backgroundColor="#6B8F6B" borderStyle="solid" borderColor="#044B03" verticalAlign="bottom">
+			<mx:Button id="buttonGuardar" cornerRadius="0" width="22" icon="@Embed(source='img/iconGuardar.gif')" height="22" click="comprobarGuardar()" toolTip="@Resource(bundle='myBundle', key='save')" disabledIcon="@Embed(source='img/iconGuardarDisabled.gif')" enabled="true"/>
+			<mx:Button id="buttonImportar" width="22" height="22" cornerRadius="0" icon="@Embed(source='img/iconImportar.gif')" click="importar()" toolTip="@Resource(bundle='myBundle', key='import')"/>
+			<mx:Button id="buttonExportar" width="22" height="22" cornerRadius="0" icon="@Embed(source='img/iconExportar.gif')" click="exportar()" toolTip="@Resource(bundle='myBundle', key='export')"/>
+			<mx:Button width="22" height="22" cornerRadius="0" id="buttonAumentarFuente" icon="@Embed(source='img/iconFuenteMas.png')" toolTip="@Resource(bundle='myBundle', key='greater_font')" click="aumentarFuente()"/>
+			<mx:Button width="22" height="22" cornerRadius="0" id="buttonDisminuirFuente" icon="@Embed(source='img/iconFuenteMenos.png')" toolTip="@Resource(bundle='myBundle', key='smaller_font')" click="disminuirFuente()"/>
+			<mx:Button width="22" height="22" cornerRadius="0" id="buttonAcercar" icon="@Embed(source='img/iconZoomMas.gif')" click="acercar()" toolTip="@Resource(bundle='myBundle', key='more_zoom')"/>
+			<mx:Button width="22" height="22" cornerRadius="0" id="buttonAlejar" icon="@Embed(source='img/iconZoomMenos.gif')" click="alejar()" toolTip="@Resource(bundle='myBundle', key='less_zoom')"/>
+			<mx:Button id="buttonView" cornerRadius="0" click="verEvaluacion()" width="22" height="22" icon="@Embed(source='img/iconOjo.png')" toolTip="@Resource(bundle='myBundle', key='view')" enabled="true" disabledIcon="@Embed(source='img/iconOjoDisabled.png')"/>
+			<mx:Button cornerRadius="0" click="imprimir()" width="22" height="22" icon="@Embed(source='img/iconImprimir.png')" toolTip="@Resource(bundle='myBundle', key='print')"/>
+			<mx:Button cornerRadius="0" width="22" height="22" icon="@Embed(source='img/iconAyuda.png')" click="ayuda()" toolTip="@Resource(bundle='myBundle', key='help')"/>
+			<mx:Button icon="@Embed(source='img/information.png')" height="22" width="22" click="about()" cornerRadius="0" toolTip="@Resource(bundle='myBundle', key='about')"/>
+			<mx:HBox width="100%" horizontalAlign="center">
+				<mx:Image source="img/logo_evalcomix_mini40_2.png" buttonMode="true" click="ayuda()"/>
+			</mx:HBox>
+			<mx:Button width="22" height="22" cornerRadius="0" enabled="false" icon="@Embed(source='img/iconError.png')" disabledIcon="@Embed(source='img/iconCorrecto.png')" id="buttonEstado" click="verEstadoInstrumento()"/>
+		</mx:HBox>
+	</mx:VBox>
+	<mx:Canvas id="contenedorInstrumento" width="100%" height="100%">
+	</mx:Canvas>
+	<mx:Script>
+		<![CDATA[
+			import componentes.VentanaAbout;
+			import componentes.VentanaConsultaGuardar;
+			import componentes.VentanaErrores;
+			import mx.collections.ArrayCollection;
+			import mx.printing.FlexPrintJobScaleType;
+			import mx.printing.FlexPrintJob;
+			import mx.core.Application;
+			import utilidades.Constants;
+			import mx.managers.PopUpManager;
+			import componentes.VentanaAviso;
+			import mx.controls.Alert;
+			import parser.ControladorParser;
+			import utilidades.EntradaSalida;
+			
+			[Embed("/../img/iconError.png")]
+			private var iconError:Class; // Icon error
+			[Embed("/../img/iconWarnings.png")]
+			private var iconWarning:Class; // Icon warning
+			
+			private var instrumento:InstrumentoEvaluacion; // Interfaz del instrumento de evaluación
+			private var estructura:String = null; // Estructura del instrumento
+			private var es:EntradaSalida = null; // Utilidad para el manejo de ficheros
+			private var identificador:String = null; // Identificador del instrumento o evaluación
+			private var tamanyoFuente:int = 10; // Tamaño de la fuente por defecto
+			private var vistaEvaluacion:Boolean = false;
+			private var errores:ArrayCollection = new ArrayCollection(); // Errores existentes en el instrumento
+			private var advertencias:ArrayCollection = new ArrayCollection(); // Advertencias existentes en el instrumento
+			
+			/**
+			 * Método para la inicialización de la ventana
+			 */
+			public function init(identificador:String, demo:int=0):void
+			{
+				es = new EntradaSalida(this);
+				setIdentificador(identificador);
+				if(demo == 1) this.setVistaDemo();
+			}
+			
+			public function setIdentificador(identificador:String):void
+			{
+				this.identificador = identificador;
+			}
+			
+			public function getIdentificador():String
+			{
+				return this.identificador;
+			}
+			
+			public function setVistaEvaluacion(evaluacion:Boolean):void
+			{
+				this.vistaEvaluacion = evaluacion;
+			}
+			
+			public function setVistaDemo():void
+			{
+				this.buttonGuardar.enabled = false;
+			}
+			
+			/**
+			 * Añade un instrumento de evaluación a la interfaz visual del objeto actual
+			 */
+			public function anyadirInstrumento(instrumento:InstrumentoEvaluacion):void
+			{
+				// Eliminamos el instrumento anterior si lo hay
+				if(this.getInstrumento())
+				{
+					this.contenedorInstrumento.removeChild(this.getInstrumento());
+				}
+				// Añadimos el nuevo instrumento
+				this.instrumento = instrumento;
+				this.contenedorInstrumento.addChild(instrumento);
+			}
+			
+			public function getInstrumento():InstrumentoEvaluacion
+			{
+				return this.instrumento;	
+			}
+			
+			public function getEstructura():String
+			{
+				return this.estructura;
+			}
+			
+			public function setEstructura(estructura:String):void
+			{
+				this.estructura = estructura;
+				// Creamos la interfaz con la información devuelta
+	        	var cp:ControladorParser = new ControladorParser();
+	        	cp.parse(this.estructura, this);
+			}
+			
+			public function comprobarGuardar():void
+			{
+				setEstadoInstrumento();
+				if(this.getErrores().length > 0)
+				{
+					var vcg:VentanaConsultaGuardar = VentanaConsultaGuardar(PopUpManager.createPopUp(this, VentanaConsultaGuardar, true));
+					vcg.setMensaje(resourceManager.getString("myBundle", "errors_instrument"));
+					PopUpManager.centerPopUp(vcg);
+					vcg.addEventListener(Event.REMOVED, guardar);
+				}
+				else
+				{
+					guardar();
+				}
+			}
+			
+			protected function guardar(event:Event=null):void
+			{
+				
+			}
+			
+			public function ayuda():void
+			{
+				//Abrimos la ayuda en una nueva ventana
+				//var h:int = Application.application.height;
+				//var w:int = Application.application.width;
+				//var fullURL:String = "javascript:var myWin; if(!myWin || myWin.closed){myWin = window.open('" + Constants.getURL_Ayuda() + "','" + resourceManager.getString("myBundle", "ayuda") + "','" + "width=" + w + ",height=" + h + ",toolbar=" + "0" + ",location=" + "0" + ",directories=" + "0" + ",status=" + "1" + ",menubar=" + "0" + ",scrollbars=" + "1" + ",resizable=" + "1" + ",top='+((screen.height/2)-(" + h/2 + "))+',left='+((screen.width/2)-(" + w/2 + "))+'" + "')}else{myWin.focus();};void(0);";
+				var url:String = Constants.getURL_Ayuda();
+				var u:URLRequest = new URLRequest(url);
+				u.contentType = "text/html; charset=ISO-8859-1";
+	        	u.method = "GET";
+				navigateToURL(u);
+			}
+			
+			public function about():void
+			{
+				var va:VentanaAbout = VentanaAbout(PopUpManager.createPopUp(this, VentanaAbout, false));
+				va.setText();
+				PopUpManager.centerPopUp(va);
+			}
+			
+			public function importar():void
+			{
+				var va:VentanaAviso = VentanaAviso(PopUpManager.createPopUp(this, VentanaAviso, true));
+				va.setMensaje(resourceManager.getString("myBundle", "warning_import"));
+				PopUpManager.centerPopUp(va);
+				va.addEventListener(Event.REMOVED, manejadorImportar);
+			}
+			
+			private function manejadorImportar(event:Event):void
+			{
+				if(event.currentTarget is VentanaAviso)
+				{
+					var va:VentanaAviso = event.currentTarget as VentanaAviso;
+					if(va.aceptar())
+					{
+						this.es.importar();
+					}
+				}
+			}
+			
+			public function exportar():void
+			{
+				var va:VentanaAviso = VentanaAviso(PopUpManager.createPopUp(this, VentanaAviso, true));
+				va.setMensaje(resourceManager.getString("myBundle", "warning_export"));
+				PopUpManager.centerPopUp(va);
+				va.addEventListener(Event.REMOVED, manejadorExportar);
+			}
+			
+			private function manejadorExportar(event:Event):void
+			{
+				if(event.currentTarget is VentanaAviso)
+				{
+					var va:VentanaAviso = event.currentTarget as VentanaAviso;
+					if(va.aceptar())
+					{
+						this.es.exportar();
+					}
+				}
+			}
+			
+			private function aumentarFuente():void
+			{
+				if(tamanyoFuente < 14)
+				{
+					tamanyoFuente++;
+					this.setStyle("fontSize", tamanyoFuente);	
+					this.instrumento.ajustarTamanyo(vistaEvaluacion);
+				}
+			}
+			
+			private function disminuirFuente():void
+			{
+				if(tamanyoFuente > 8)
+				{
+					tamanyoFuente--;
+					this.setStyle("fontSize", tamanyoFuente);	
+					this.instrumento.ajustarTamanyo(vistaEvaluacion);
+				}
+			}
+			
+			private function acercar():void
+			{
+				this.instrumento.aumentarZoom();
+			}
+			
+			private function alejar():void
+			{
+				this.instrumento.disminuirZoom();
+			}
+			
+			public function deshabilitarGuardar():void
+			{
+				this.buttonGuardar.enabled = false;
+			}
+			
+			public function deshabilitarImportar():void
+			{
+				this.buttonImportar.enabled = false;
+			}
+			
+			public function deshabilitarExportar():void
+			{
+				this.buttonExportar.enabled = false;
+			}
+			
+			public function deshabilitarVistaPrevia():void
+			{
+				this.buttonView.enabled = false;
+			}
+			
+			public function getEntradaSalida():EntradaSalida
+			{
+				return this.es;
+			}
+			
+			private function imprimir():void
+			{
+				var printJob:FlexPrintJob = new FlexPrintJob();
+				printJob.start(); 
+				printJob.addObject(this.getInstrumento(), FlexPrintJobScaleType.MATCH_WIDTH);
+				printJob.printAsBitmap = false;
+				printJob.send(); 
+			}
+			
+			private function verEvaluacion():void
+			{
+				if(!vistaEvaluacion)
+				{
+					this.instrumento.setVistaEvaluacion();
+					vistaEvaluacion = true;
+				}
+				else
+				{
+					// Creamos la interfaz con la información devuelta
+	        		var cp:ControladorParser = new ControladorParser();
+	        		cp.parse(this.instrumento.toXML(), this);
+	        		vistaEvaluacion = false;
+				}
+				buttonView.selected = vistaEvaluacion;
+			}
+			
+			public function getAdvertenciasInstrumento():void
+			{
+				this.instrumento.getAdvertencias(this.advertencias);
+			}
+			
+			public function getAdvertencias():ArrayCollection
+			{
+				return this.advertencias;
+			}
+			
+			public function getErroresInstrumento():void
+			{
+				this.instrumento.getErrores(this.errores);
+			}
+			
+			public function getErrores():ArrayCollection
+			{
+				return this.errores;
+			}
+			
+			public function setEstadoInstrumento():void
+			{
+				errores = new ArrayCollection();
+				this.instrumento.getErrores(errores);
+				advertencias = new ArrayCollection();
+				this.instrumento.getAdvertencias(advertencias);
+				if(errores.length > 0)
+				{
+					this.buttonEstado.enabled = true;
+					this.buttonEstado.setStyle("icon", iconError);
+					this.buttonEstado.toolTip = resourceManager.getString("myBundle", "error_instrument");
+				}
+				else if(advertencias.length > 0)
+				{
+					this.buttonEstado.enabled = true;
+					this.buttonEstado.setStyle("icon", iconWarning);
+					this.buttonEstado.toolTip = resourceManager.getString("myBundle", "warning_instrument");
+				}
+				else
+				{
+					this.buttonEstado.enabled = false;
+					this.buttonEstado.toolTip = resourceManager.getString("myBundle", "correct_instrument");
+				}
+			}
+			
+			protected function verEstadoInstrumento():void
+			{
+				setEstadoInstrumento();
+				if(errores.length == 0 && advertencias.length == 0)
+				{
+					Alert.show(resourceManager.getString("myBundle", "correct"), resourceManager.getString("myBundle", "warning"));
+				}
+				else
+				{
+					var ve:VentanaErrores = VentanaErrores(PopUpManager.createPopUp(this, VentanaErrores, false));
+					PopUpManager.centerPopUp(ve);
+					ve.setErrores(errores);
+					ve.setAdvertencias(advertencias);
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

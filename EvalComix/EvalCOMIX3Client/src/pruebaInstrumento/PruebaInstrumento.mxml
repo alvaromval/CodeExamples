@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstrumentoEvaluacion xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:VBox minWidth="1200">
+		<mx:Button id="buttonBorrar" click="borrar()" width="12" cornerRadius="0" icon="@Embed(source='../img/iconClose2.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+		<mx:HBox x="10" y="25" width="100%">
+			<mx:Label text="Titulo:" fontWeight="bold"/>
+			<mx:TextArea fontWeight="normal" text="Titulo" id="tituloText"/>
+			<mx:Label text="Nota:" fontWeight="bold"/>
+			<mx:TextInput width="40" backgroundColor="#000000" color="#00FF00" text="0" textAlign="right" fontWeight="bold" id="notaText" editable="false"/>
+			<mx:HBox id="panelPorcentaje" width="100%" height="100%" visible="false">
+				<mx:Label text="porcentaje" toolTip="@Resource(bundle='myBundle', key='help_percentage')" id="LabelPorcentaje"/>
+				<mx:TextInput width="34" maxChars="3" id="porcentajeText" backgroundColor="#000000" color="#00F00F" fontFamily="Verdana" fontWeight="bold" textAlign="right" restrict="/0-9/"/>
+				<mx:Button id="buttonPorcentaje" width="18" cornerRadius="0" icon="@Embed(source='../img/iconPrctg.gif')" click="insertarPorcentaje(0, event);"/>
+			</mx:HBox>
+		</mx:HBox>
+		<mx:HBox horizontalAlign="center" width="100%">
+			<mx:RadioButtonGroup id="valores" change="actualizarNota()"/>
+			<mx:RadioButton label="0" groupName="valores" selected="true"/>
+			<mx:RadioButton label="1" groupName="valores"/>
+			<mx:RadioButton label="2" groupName="valores"/>
+			<mx:RadioButton label="3" groupName="valores"/>
+			<mx:RadioButton label="4" groupName="valores"/>
+		</mx:HBox>
+		<mx:Button id="buttonAnyadir" click="anyadir()" x="1" y="44" width="12" cornerRadius="0" icon="@Embed(source='../img/iconAnyadir.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+	</mx:VBox>
+	<mx:Script>
+		<![CDATA[
+			import utilidades.Constants;
+			import utilidades.Common;
+			import mx.controls.RadioButton;
+			use namespace mx_internal;
+			
+			public override function getNota():int
+			{
+				var nota:Number = 0;
+				for(var i:int = 0; i < valores.numRadioButtons; i++)
+				{
+					var rb:RadioButton = valores.getRadioButtonAt(i);
+					if(rb.selected)
+					{
+						nota = i/(valores.numRadioButtons-1);	
+					}
+				}
+				return Common.redondear(nota*100);
+			}
+			
+			public override function actualizarNota(event:Event=null):void
+			{
+				this.notaText.text = getNota().toString();
+			}
+			
+			public override function setName(nombre:String):void
+			{
+				this.tituloText.text = nombre;
+			}
+			
+			public override function getName():String
+			{
+				return this.tituloText.text;
+			}
+			
+			public override function getPorcentajeText():int
+			{
+				return parseInt(porcentajeText.text);
+			}
+			
+			public override function setPorcentajeText(porcentaje:String):void
+			{
+				this.porcentajeText.text = porcentaje;
+			}
+			
+			public override function toXML(child:Boolean=false):String
+			{
+				// Si está dentro de una herramienta mixta
+				if(child)
+				{
+					var texto:String = '<TestInstrument name="' + this.getName() + '"';
+					if(this.getPorcentaje() > -1)
+					{
+						texto += ' percentage="' + this.getPorcentaje() + '">\n';
+					}
+					else
+					{
+						texto += '>\n';
+					}
+					// Obtenemos el índice del valor seleccionado en la escala
+					for(var i:int = 0; i < this.valores.numRadioButtons; i++)
+					{
+						if(this.valores.getRadioButtonAt(i).selected) texto += i;
+					}
+					texto += "</TestInstrument>";
+					return texto;
+				}
+				// Si no está dentro de una herramienta mixta
+				else
+				{
+					var texto:String = '<ti:TestInstrument xmlns:cl="' + Constants.TEST_INSTRUMENT_NS + '"' +
+					'\nxmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+					'\nxsi:schemaLocation="' + Constants.TEST_INSTRUMENT_NS + ' ' + Constants.TEST_INSTRUMENT_XSD + '"' + 
+					'\nname="' + this.getName() + '">\n';
+					// Obtenemos el índice del valor seleccionado en la escala
+					for(var i:int = 0; i < this.valores.numRadioButtons; i++)
+					{
+						if(this.valores.getRadioButtonAt(i).selected) texto += i;
+					}
+					texto += "</ti:TestInstrument>";
+					return texto;
+				}
+			}
+
+			public override function setVistaHerramientaMixta():void
+			{
+				this.buttonAnyadir.visible = true;
+				this.buttonBorrar.visible = true;
+				this.panelPorcentaje.visible = true;
+			}
+						
+			public override function ocultarVistaHerramientaMixta():void
+			{
+				this.buttonAnyadir.visible = false;
+				this.buttonBorrar.visible = false;
+			}
+			
+			public override function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				// Comprobamos el nombre
+				if(this.getName() == null || Common.trim(this.getName()) == "")
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_instrument_name") + "\n" + resourceManager.getString("myBundle", "test_instrument"));
+				}
+			}
+			
+			public override function setVistaEvaluacion():void
+			{
+				this.tituloText.editable = false;
+				this.buttonPorcentaje.enabled = false;
+				this.porcentajeText.editable = false;
+				
+				// Ajustamos la altura de los campos de texto
+				this.tituloText.setStyle("fontWeight", "bold");
+				this.tituloText.validateNow();
+				// Ajustamos la anchura del título hasta un máximo
+				var altura:Number = this.tituloText.getTextField().textHeight;
+				while(this.tituloText.getTextField().textHeight > this.tituloText.getStyle("fontSize")*2 && this.tituloText.width < 600)
+				{
+					this.tituloText.width = this.tituloText.width*(1.1);
+				}
+				// Ajustamos la altura del título
+				this.tituloText.validateNow();
+				this.tituloText.height = this.tituloText.getTextField().textHeight + this.tituloText.getLineMetrics(0).height;
+
+				// Si es el caso, ocultamos la vista mixta
+				this.ocultarVistaHerramientaMixta();
+			}
+			
+			private function setSeleccion(seleccion:String):void
+			{
+				var sel:int = parseInt(seleccion);
+				for(var i:int = 0; i < valores.numRadioButtons; i++)
+				{
+					if(i == sel)
+					{
+						valores.selection = valores.getRadioButtonAt(i);
+					}
+				}
+			}
+		]]>
+	</mx:Script>
+</InstrumentoEvaluacion>

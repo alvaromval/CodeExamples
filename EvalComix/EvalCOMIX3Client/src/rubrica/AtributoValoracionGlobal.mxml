@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="45" verticalAlign="top" borderStyle="solid" horizontalGap="2" borderSides="none" alpha="1.0" borderColor="#060606" backgroundAlpha="0.0">
+	<mx:TextInput id="porcentajeText" width="33" maxChars="3" restrict="/0-9/" backgroundColor="#000000" color="#00F00F" fontFamily="Verdana" fontSize="10" textAlign="right" fontWeight="bold"/>
+	<mx:Button id="buttonPorcentaje" width="18" icon="@Embed(source='../img/iconPrctg.gif')" cornerRadius="0" click="insertarPorcentaje(1, event);"/>
+	<mx:TextArea width="235" id="nombre" backgroundColor="#FFFFFF" change="redimensionar()"/>
+	<mx:HBox width="100%" height="100%" horizontalGap="0" id="valoresBox">
+	</mx:HBox>
+	<mx:RadioButtonGroup id="valor"/>
+		<mx:initialize>
+		<![CDATA[
+			this.valor.addEventListener(Event.CHANGE, actualizarNota);
+		]]>
+	</mx:initialize>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import utilidades.Common;
+			import mx.controls.RadioButton;
+			use namespace mx_internal;
+			
+			private var valGlobal:ValoracionGlobal = null;
+			private var porcentaje:int = -1;
+			private var numValores:int = 0; // Número de valores que puede tomar el atributo
+			
+			public function setName(nombre:String):void
+			{
+				this.nombre.text = nombre;
+			}
+			
+			public function getName():String
+			{
+				return this.nombre.text;
+			}
+			
+			/**
+			 * Función que inserta un número determinado de valores en un atributo
+			 */
+			public function insertar(valores:int, valoresArr:Array):void
+			{
+				this.numValores = valores;
+				for(var i:int = 0; i < valores; i++)
+				{
+					var rb:RadioButton = new RadioButton();
+					this.valoresBox.addChild(rb);
+					//rb.percentWidth = 100;
+					rb.minWidth = 100;
+					rb.width = (valoresArr[i] as TextInput).width;
+					rb.value = i;
+					rb.groupName = "valor";
+					// Por defecto seleccionamos el primero
+					if(i == 0)
+					{
+						rb.selected = true;
+					}
+				}	
+			}
+			
+			public function insertarPorcentaje(porcent:int, event:MouseEvent=null):void
+			{
+				if(event != null)
+				{
+					if(parseInt(this.porcentajeText.text) < 100)
+					{
+						this.setPorcentaje(100);
+						Alert.show(resourceManager.getString("myBundle", "warning_percentage"), resourceManager.getString("myBundle", "warning"));
+			 		}
+				}
+			}
+			
+			public function setValoracionGlobal(valGlobal:ValoracionGlobal):void
+			{
+				this.valGlobal = valGlobal;
+			}
+			
+			public function getValoracionGlobal():ValoracionGlobal
+			{
+				return this.valGlobal;
+			}
+			
+			public function anyadirCasillaValor(index:int):void
+			{
+				var rb:RadioButton = new RadioButton();
+				this.valoresBox.addChild(rb);
+				//rb.percentWidth = 100;
+				rb.width = 100;
+				rb.value = index;
+				rb.groupName = "valor";
+			}
+			
+			public function eliminarCasillaValor(index:int):void
+			{
+				if(valoresBox.getChildAt(index) is RadioButton)
+				{
+					var rb:RadioButton = valoresBox.getChildAt(index) as RadioButton;
+					if(rb.selected)
+					{
+						(this.valoresBox.getChildAt(0) as RadioButton).selected = true;
+					}
+				}
+				this.valoresBox.removeChildAt(index);
+			}
+			
+			public function getValor():int
+			{
+				return parseInt(valor.selection.value.toString());
+			}
+			
+			private function redimensionar():void
+			{
+				//if(this.nombre.textWidth
+				//this.nombre.width = this.nombre.textWidth;
+			}
+			
+			/**
+			 * Devuelve la nota obtenida en el atributo respecto al número de valores y al porcentaje asignado
+			 * nota= (valor_seleccionado/num_valores)*porcentaje
+			 */
+			public function getNota():int
+			{
+				var nota:int = 0;
+				if(valor.selection != null)
+				{
+					if(parseInt(valor.selection.value.toString()) > 0)
+					{
+						var aux:Number = 0;
+						if(this.valGlobal != null)
+						{
+							aux = parseFloat(valor.selection.value.toString())/(this.valGlobal.getValores().length-1);
+						}
+						nota = aux*this.getPorcentaje();
+					}
+				}
+				else
+				{
+					for(var i:int = 0; i < this.valoresBox.numChildren; i++)
+					{
+						if(valoresBox.getChildAt(i) is RadioButton)
+						{
+							if(i > 0)
+							{
+								if((valoresBox.getChildAt(i) as RadioButton).selected)
+								{
+									if(this.valGlobal != null)
+									{
+										var aux:Number = i/(this.valGlobal.getValores().length - 1);
+										nota = aux*this.getPorcentaje();
+										return nota;
+									}
+								}
+							}
+						}
+					}
+				}
+				return nota;
+			}
+			
+			public function setPorcentaje(porcentaje:int):void
+			{
+				if(porcentaje <= 100 && porcentaje >= 0)
+				{
+					this.porcentaje = porcentaje;
+					this.porcentajeText.text = porcentaje.toString();
+				}
+			}
+			
+			public function getPorcentaje():int
+			{
+				return this.porcentaje;
+			}
+			
+			/**
+			 * Establece la selección del atributo
+			 */
+			public function selectValue(index:int):void
+			{
+				(this.valoresBox.getChildAt(index) as RadioButton).selected = true;
+			}
+			
+			private function actualizarNota(event:Event=null):void
+			{
+				valGlobal.actualizarNota();
+			}
+	
+			/**
+			 * Función que transforma la clase en un objeto XML
+			 */
+			public function toXML(nivel:int):String
+			{
+				// Construimos el texto XML
+				var texto:String = Common.tabs(nivel) + '<Attribute name="' + this.nombre.text + '" percentage="' + this.getPorcentaje() + '">' + valor.selection.value + '</Attribute>';
+				// Lo devolvemos en forma de objeto XML
+				return texto;
+			}
+			
+			/**
+			 * Deshabilita las opciones de edición para mostrar la ventana de evaluación
+			 */
+			public function setVistaEvaluacion():void
+			{
+				//this.buttonAnyadir.visible = false;
+				//this.buttonBorrar.visible = false;
+				this.buttonPorcentaje.enabled = false;
+				this.porcentajeText.editable = false;
+				this.nombre.editable = false;
+				this.nombre.validateNow();
+				this.nombre.height = this.nombre.getTextField().textHeight + this.nombre.getLineMetrics(0).height;
+			}
+			
+			public function ajustarLongitud(longitud:int, index:int):void
+			{
+				for(var i:int = 0; i < valoresBox.getChildren().length; i++)
+				{
+					if(i == index)
+					{
+						valoresBox.getChildAt(i).width = longitud;
+					}
+				}	
+			}
+			
+			public function ajustarAltura():void
+			{
+				this.nombre.validateNow();
+				this.nombre.height = this.nombre.getTextField().textHeight + this.nombre.getLineMetrics(0).height;
+			}
+			
+			public function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				if(this.getName() == null || Common.trim(this.getName()) == "")
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_attribute_name") + "\n" + this.localization());
+				}
+			}
+			
+			public function getErrores(errores:ArrayCollection):void
+			{
+				
+			}
+			
+			private function localization():String
+			{
+				var localizacion:String =
+					resourceManager.getString("myBundle", "attribute") + this.getName() + " at" +
+					"\n" + resourceManager.getString("myBundle", "global_assessment_text") + " at" +
+					"\n" + resourceManager.getString("myBundle", "rubric") + ":" + this.getValoracionGlobal().getRubrica().getName();
+				return localizacion;
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

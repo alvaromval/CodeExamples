@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TextInput xmlns:mx="http://www.adobe.com/2006/mxml"
+			  initialize="init()"
+			  textInput="handlerTextInput(event)"
+			  focusOut="handlerFocusOut()" 
+			  focusIn="handlerFocusIn()"
+			  keyDown="KeyDownHandler(event)"
+			  restrict="{restrictExpression}">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.ferrovial.phoenix.model.PhoenixModelLocator;
+			
+			[Bindable] public var integer:Boolean = false;
+			
+			[Bindable] private var restrictExpression:String;
+			[Bindable] private var model:PhoenixModelLocator = PhoenixModelLocator.getInstance();
+			[Bindable] private var decimalSeparator:String;
+			[Bindable] private var thousandsSeparator:String;
+			
+			private var formatted:Boolean = false;
+			private var onInit:Boolean = true;
+			private var setting:Boolean = false;
+			private var focusing:Boolean = false;
+			private var decimalPositions:int;
+			
+			private function init():void
+			{
+				thousandsSeparator = model.userModel.milesSeparator;
+				decimalSeparator = model.userModel.decimalSeparator;
+				decimalPositions = model.userModel.decimalDigits;
+		
+				restrictExpression = integer ? "0-9" : "0-9" + "/" + decimalSeparator;
+			}
+		
+			private function handlerTextInput(event:TextEvent):void
+			{
+				if(event.text == decimalSeparator)
+				{
+					if(HasDecimalSeparator(this.text))
+					{
+						event.preventDefault();
+						event.stopImmediatePropagation();
+					}
+				}
+			}
+			
+			private function KeyDownHandler(event:KeyboardEvent):void
+			{
+				if(HasDecimalSeparator(this.text))
+				{
+					event.preventDefault();
+					event.stopImmediatePropagation();
+				}
+				// 110 es el código de la tecla "punto decimal" del teclado numérico
+				else if(event.keyCode == 110)
+				{
+					super.text = text + decimalSeparator;
+					setSelection(super.text.length, super.text.length);
+				}
+			}
+			
+			private function HasDecimalSeparator(str:String):Boolean
+			{
+				return str.indexOf(decimalSeparator) > -1;
+			}
+			
+			private function handlerFocusOut():void
+			{
+				this.focusing = true;
+				this.text = format();
+				this.focusing = false;
+			}
+			
+			private function handlerFocusIn():void
+			{
+				this.focusing = true;
+				this.text = removeFormat();
+				this.focusing = false;
+			}
+			
+			[Bindable]
+			public function get value():Number
+			{
+				return parseFloat(removeFormatForValue());
+			}
+			
+			public function set value(val:Number):void
+			{
+				text = val.toString();
+			}
+			
+			override public function set text(value:String):void
+			{
+				if(focusing || onInit)
+				{
+					if(onInit)
+					{
+						super.text = formatInit(value);
+						onInit = false;
+					}
+					else
+					{
+						super.text = value;
+					}
+				}
+			}
+			
+			public function setText(value:String):void
+			{
+				formatted = false;
+				super.text = formatInit(value);
+				onInit = false;
+			}
+			
+			/************************************ AMV INIT FORMAT FUNCTIONS **********************************************/
+			
+			private function format():String
+			{
+				var auxText:String = this.text;
+				try
+				{
+					if(!isNaN(parseFloat(auxText)))
+					{
+						if(!formatted)
+						{
+							formatted = true;
+							if(auxText.indexOf(decimalSeparator) > -1)
+							{
+								// AMV split each part
+								var pointIndex:int = auxText.indexOf(decimalSeparator);
+								var integerText:String = auxText.substr(0, pointIndex);
+								var decimalText:String = auxText.substr(pointIndex+1, auxText.length);
+								// AMV format each part and join them
+								if(integer)
+									auxText = formatIntegerInput(integerText);
+								else
+									auxText = formatIntegerInput(integerText) + decimalSeparator + formatDecimalInput(decimalText);
+							}
+							else
+							{
+								integerText = auxText;
+								// AMV format only the integer part
+								auxText = formatIntegerInput(auxText);
+							}
+						}
+					}
+					else
+					{
+						formatted = true;
+						auxText = "0";
+					}
+				}
+				catch(e:Error)
+				{
+					formatted = true;
+					auxText = "0";
+				}
+				return auxText;
+			}
+			
+			private function formatInit(value:String):String
+			{
+				var auxText:String = value;
+				try
+				{
+					if(!isNaN(parseFloat(auxText)))
+					{
+						if(!formatted)
+						{
+							formatted = true;
+							if(auxText.indexOf(".") > -1)
+							{
+								// AMV split each part
+								var pointIndex:int = auxText.indexOf(".");
+								var integerText:String = auxText.substr(0, pointIndex);
+								var decimalText:String = auxText.substr(pointIndex+1, auxText.length);
+								// AMV format each part and join them
+								if(integer || decimalText == "" || decimalText == null)
+									auxText = formatIntegerInput(integerText);
+								else
+									auxText = formatIntegerInput(integerText) + decimalSeparator + formatDecimalInput(decimalText);
+							}
+							else
+							{
+								integerText = auxText;
+								// AMV format only the integer part
+								auxText = formatIntegerInput(auxText);
+							}
+						}
+					}
+					else
+					{
+						formatted = true;
+						auxText = "0";
+					}
+				}
+				catch(e:Error)
+				{
+					formatted = true;
+					auxText = "0";
+				}
+				return auxText;
+			}
+			
+			private function formatIntegerInput(integerText:String):String
+			{
+				var len:int = integerText.length;
+				var c:int = 0;
+				for(var i:int = 0; i < len; i++)
+				{
+					if(i > 0 && i%3 == 0)
+					{
+						integerText = integerText.substr(0, len - i) + thousandsSeparator + integerText.substr(integerText.length - c - i, integerText.length);
+						c++;
+					}
+				}
+				if(integerText == "" || integerText == null)
+					integerText = "0";
+				return integerText;
+			}
+			
+			private function formatDecimalInput(decimalText:String):String
+			{
+				if(decimalText.length > decimalPositions)
+					decimalText = decimalText.substr(0, decimalPositions);
+				
+				return decimalText;
+			}
+			
+			private function removeFormat():String
+			{
+				var auxText:String = this.text;
+				if(formatted)
+				{
+					formatted = false;
+					if(auxText.indexOf(decimalSeparator) > -1)
+					{
+						// AMV split each part
+						var pointIndex:int = auxText.indexOf(decimalSeparator);
+						var integerText:String = auxText.substr(0, pointIndex);
+						var decimalText:String = auxText.substr(pointIndex+1, auxText.length);
+						// AMV format each part and join them
+						auxText = removeIntegerFormatting(integerText) + decimalSeparator + formatDecimalInput(decimalText);
+					}
+					else
+					{
+						// AMV remove the format only from the integer part
+						auxText = removeIntegerFormatting(auxText);
+					}
+				}
+				return auxText;
+			}
+			
+			private function removeIntegerFormatting(integerText:String):String
+			{  
+				var array:Array;
+				array = integerText.split(thousandsSeparator);
+				integerText = integerText;
+				integerText = array.join("");
+				return integerText;
+			}
+			
+			private function removeFormatForValue():String
+			{
+				var auxText:String = this.text;
+				if(formatted)
+				{
+					if(auxText.indexOf(decimalSeparator) > -1)
+					{
+						// AMV split each part
+						var pointIndex:int = auxText.indexOf(decimalSeparator);
+						var integerText:String = auxText.substr(0, pointIndex);
+						var decimalText:String = auxText.substr(pointIndex+1, auxText.length);
+						// AMV format each part and join them
+						auxText = removeIntegerFormatting(integerText) + "." + formatDecimalInput(decimalText);
+					}
+					else
+					{
+						// AMV remove the format only from the integer part
+						auxText = removeIntegerFormatting(auxText);
+					}
+				}
+				else
+				{
+					auxText = auxText.replace(decimalSeparator, ".");
+				}
+				return auxText;
+			}
+			
+			/************************************ AMV END FORMAT FUNCTIONS **********************************************/
+
+		]]>
+	</mx:Script>
+</mx:TextInput>

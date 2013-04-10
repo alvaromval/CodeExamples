@@ -1,0 +1,105 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<link rel="stylesheet" type="text/css" href="../../css/style.css" title="default">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>Assessment</title></head>
+<body>
+<table style="width: 100%; height: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; width: 300px; background-color: white;"><big style="font-family: Calibri; font-weight: bold;">EvalCOMIX 3 Help Manual:</big><br>
+<ul style="font-family: Calibri;">
+<li><a href=".">Introduction</a></li><li><a href="terminology.htm">Terminology</a></li>
+<li><a href="controllist.htm">Control list</a></li>
+<li><a href="valuelist.htm">List/set of
+values</a></li>
+<li><a href="controlvalue.htm">Control
+list+Value list</a></li>
+<li><a href="rubric.htm">Rubric</a></li>
+<li><a href="matrix.htm">Decision matrix</a></li>
+<li><a href="mix.htm">Mix tool</a></li>
+<li style="width: 250px;"><a href="modifying.htm">Modifying and instrument</a><br>
+</li>
+<li style="width: 250px; font-weight: bold;">Assessment</li>
+<li style="width: 250px;"><a href="percentages.htm">Setting elements percentages</a></li>
+<li style="width: 250px;"><a href="exporting.htm">Exporting an instrument to a file</a></li>
+<li style="width: 250px;"><a href="importing.htm">Importing and instrument from a file</a></li><li style="width: 250px;"><a href="people.htm">People</a></li><li style="width: 250px;"><a href="ApiEvalComix3.0.pdf">API and integration manual</a></li>
+</ul><div style="margin-left: 40px;"><a href="http://avanza.uca.es/assessmentservice"><img style="border: 0px solid ; width: 257px; height: 83px;" alt="EvalCOMIX 3" src="img/cabecera.jpg"></a></div><ol style="font-family: Calibri;">
+</ol>
+</td>
+<td style="vertical-align: top; background-color: rgb(235, 235, 235); width: 1279px;"><big style="font-family: Calibri; font-weight: bold;">Assessment:</big><br>
+<br>
+<div style="margin-left: 40px;"><span style="font-family: Calibri;">All the instruments in the
+service can be used for assessment except Decision Matrix, because is
+an instrument to make decisions.<br>
+<br>
+The asseesment is done using the evaluation screen of the instruments
+created, that looks similar to the edition screen but<br>
+without the editing options.<br>
+<br>
+i.e. If we use a List/Set of values, the edition will look like this: <br>
+<img style="width: 1147px; height: 713px;" alt="Assessment 0" src="img/evaluacion0.png"><br>
+And the evaluation will look like this:<br>
+<img style="width: 1153px; height: 667px;" alt="Assessment 1" src="img/evaluacion1.png"><br>
+<br>
+When we are in the evaluation, we only can modify the attributes of
+subdimensions or global assessments. Setting the appropraite values:<br>
+<img style="width: 1153px; height: 667px;" alt="Assessment 2" src="img/evaluacion2.png"><br>
+<br>
+As we modify the values, we can see how the grade change. The grade is
+on the top right corner of the screen:<br>
+<img style="width: 1145px; height: 666px;" alt="Assessment 3" src="img/evaluacion3.png"><br><br>In all instruments, values are between 0 and 100, divided into the
+number of values, i.e., in the example showed above, be have 6 values<br>
+in the subdimension, so "Value0" is 0, "Value1" is 16% ... and "Value5"
+is 100%.<br>
+Besides we have to consider the percentage of the element that owns the
+values, in this case, each attribute has a 16% of value in the
+subdimension.<br>
+<br>
+Percentages are always relative to the elements in the same level, and
+their total is always 100%.<br>
+Let's see in the example above:<br>
+The dimension and the global assessment -&gt; each one has a 50%
+(of the parent element, in this case the List of values)<br>
+The subdimension -&gt; because there is onlye one, has a 100% (of
+the parent element, in this case the dimension)<br>
+The attributes in the subdimension -&gt; each one has a 16% of the
+subidmension)<br>
+(Percentages can be always modified by the user)</span><span style="font-family: Calibri;"><br>
+<img style="width: 1153px; height: 667px;" alt="Assessment 4" src="img/evaluacion4.png"><br><br>In this example:<br>
+1. If all the attributes are set to the greater value ("Value5"), the
+subdimension will have a value of 100%<br>
+2. Because there is only one subdimension, in this case the
+subdimension is the 100% of its parent element (the dimension)<br>
+3. If the global assessment is set to the minimum value "Value0", the
+value of the global assessment will be 0%<br>
+4. The final grade will be 50, because the value of the dimension is
+100 and the value of the global assessment is 0 (and each element has a
+50%)<br>
+<img style="width: 1142px; height: 661px;" alt="Assessment 5" src="img/evaluacion5.png"><br>
+</span><span style="font-family: Calibri;"></span><br>
+<span style="font-family: Calibri;">WARNING: After
+the assessment we have to save to update the results in the database</span>.<span style="font-family: Calibri;"><span style="font-weight: bold;"></span><br>
+<br>
+<span style="font-weight: bold;">Assessment with
+rubrics</span><br>
+<br>
+In this case, the assessment with rubrics is a little different
+because&nbsp;values have the final value already set. In this case
+we have no upward lists of<br>
+values, we&nbsp;have&nbsp;cells with a values.<br>
+<img style="width: 1107px; height: 612px;" alt="Assessment 6" src="img/evaluacion6.png"><br>
+<br>
+If we select 20, the value of the attribute will be 20 (afterwards we
+have to consider the percentage...), if we select a cell with 100, the
+value will be<br>
+100, etc. So rubrics are no limited to upwards lists of values, like
+the other instruments, because we can specify any range of values
+(always between 0 and 100).<br>
+<br>
+</span><span style="font-family: Calibri;"></span></div>
+</td>
+</tr>
+</tbody>
+</table>
+</body></html>

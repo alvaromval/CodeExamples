@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="middle" horizontalAlign="center" title="@Resource(bundle='myBundle', key='window_selection')" width="462">
+	<mx:Label text="@Resource(bundle='myBundle', key='instrument_selection')" fontSize="11" fontWeight="bold"/>
+	<mx:VBox id="panelSelecciones">
+		<!--<mx:RadioButton label="@Resource(bundle='myBundle', key='value_list_selection')" groupName="instrumentos" value="{Constants.ESCALA_VALORACION}" selected="true"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='control_list_selection')" groupName="instrumentos" value="{Constants.LISTA_CONTROL}"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='control_list_value_list_selection')" groupName="instrumentos" value="{Constants.LISTA_CONTROL_ESCALA_VALORACION}"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='rubric_selection')" groupName="instrumentos" value="{Constants.RUBRICA}"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='semantic_differential_selection')" groupName="instrumentos" value="{Constants.SEMANTIC_DIFFERENTIAL}"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='decision_matrix_selection')" groupName="instrumentos" value="{Constants.MATRIZ_DECISION}"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='mix_selection')" groupName="instrumentos" value="{Constants.MIXTA}"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='import_instrument')" groupName="instrumentos" value="import"/>-->
+	</mx:VBox>
+	<mx:Button label="@Resource(bundle='myBundle', key='accept')" cornerRadius="0" click="aceptar()"/>
+	<mx:RadioButtonGroup id="instrumentos"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.RadioButton;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.core.Application;
+			import utilidades.Constants;
+			private var identificador:String = null;
+			private var demo:int = 0;
+		
+			public function inicializar(identificador:String, demo:int=0):void
+			{
+				this.identificador = identificador;	
+				this.demo = demo;
+				crearSelecciones();
+			}
+			
+			private function crearSelecciones():void
+			{
+				// Añadimos una selección por cada tipo de instrumento
+				for(var i:int = 0; i < Constants.instrumentos.length; i++)
+				{
+					var rb:RadioButton = new RadioButton();
+					panelSelecciones.addChild(rb);
+					rb.label = resourceManager.getString("myBundle", Constants.instrumentos[i][1]);
+					rb.value = Constants.instrumentos[i][0];
+					if(i == 0)
+					{
+						rb.selected = true;
+					}
+					rb.group = this.instrumentos;
+				}
+				// Finalmente añadimos la selección de importación
+				var rb:RadioButton = new RadioButton();
+				panelSelecciones.addChild(rb);
+				rb.label = resourceManager.getString("myBundle", "import");
+				rb.value = "import";
+				rb.group = this.instrumentos;
+			}
+			
+			private function aceptar():void
+			{
+				// Si elegimos importar
+				if(instrumentos.selectedValue.toString() == "import")
+				{
+					// Creamos la ventana de importación
+					var vi:VentanaImportacion = new VentanaImportacion();
+					// La añadimos a la aplicación
+	   				Application.application.setVentana(vi);
+					vi.inicializar(identificador, demo);
+					PopUpManager.removePopUp(this);
+				}
+				// Si elegimos crear un instrumento desde cero
+				else
+				{
+					// Creamos una ventana de creación
+	   				var vc:VentanaCreacion = new VentanaCreacion();
+	   				// La añadimos a la aplicación
+	   				Application.application.setVentana(vc);
+	   				vc.inicializar(identificador, instrumentos.selectedValue.toString(), demo);
+	   				// Eliminamos la actual
+	   				PopUpManager.removePopUp(this);
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalGap="2">	
+	<mx:Canvas width="70">
+	</mx:Canvas>
+	<mx:HBox backgroundColor="#BFE4AB" horizontalGap="2">
+		<mx:Label text="Valor negativo" width="200" textAlign="right"/>
+		<mx:HBox width="100%" horizontalGap="2" id="panelValores">
+		</mx:HBox>
+		<mx:Label text="Valor positivo" width="200"/>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import utilidades.Common;
+			import mx.controls.Label;
+			private var numValores:int = 0; // Número de valores de la escala
+		
+			public function setValores(numValores:int):void
+			{
+				if(numValores > 0)
+				{
+					panelValores.removeAllChildren();
+					for(var i:int = 0 - numValores/2; i < numValores/2; i++)
+					{
+						var lb:Label = new Label();
+						this.panelValores.addChild(lb);
+						lb.minWidth = 50;
+						lb.setStyle("textAlign", "center");
+						lb.text = i.toString();
+					}	
+					this.numValores = numValores;
+				}
+			}
+			
+			public function getValores():int
+			{
+				return this.numValores;
+			}
+			
+			/**
+			 * Devuelve la representación XML del objeto
+			 */
+			public function toXML(nivel:int):String
+			{
+				// Construimos el texto XML
+				var texto:String = Common.tabs(nivel) + '<Values>\n';
+				for(var i:int = 0 - getValores()/2; i < getValores()/2; i++)
+				{
+					texto += '<Value>' + i.toString() + '</Value>\n';
+				}	
+				texto += '</Values>';
+				return texto;
+			} 
+		]]>
+	</mx:Script>
+</mx:HBox>

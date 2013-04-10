@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0" borderStyle="solid" borderThickness="2" borderColor="#FFFFFF" backgroundColor="#DBE8DB" fontWeight="bold">
+	<mx:HBox id="panelTitulos" minWidth="1100" height="60" horizontalGap="0">
+		<mx:Canvas width="250" height="60">
+			<mx:Label x="20" y="29" text="@Resource(bundle='myBundle', key='competences_actors')" height="31" textAlign="right" fontSize="11"/>
+		</mx:Canvas>
+	</mx:HBox>
+	<mx:VBox id="panelCompetencias" width="100%" height="100%" verticalGap="0">
+	</mx:VBox>
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.ComboBase;
+			import mx.controls.TextInput;
+			import utilidades.Common;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			
+			private var padre:MatrizDecision = null;
+			private var numCriterios:int = 0;
+			private var numCompetencias:int = 0;
+			private var criterios:ArrayCollection = new ArrayCollection();
+			private var competencias:ArrayCollection = new ArrayCollection();
+		
+			public function setNumCriterios(num:int):void
+			{
+				if(num > 0)
+				{
+					// Si ya había criterios insertados
+					if(this.numCriterios > 0)
+					{
+						// Si ahora hay más
+						if(num > numCriterios)
+						{
+							for(var i:int = numCriterios; i < num; i++)
+							{
+								var tc:TituloCriterio = new TituloCriterio();
+								panelTitulos.addChild(tc);
+								// Actualizamos el tamaño
+								tc.width = panelTitulos.getChildAt(1).width;
+								tc.setLetra(i);
+								criterios.addItem(tc);
+								// Por cada competencia debemos añadir un nuevo criterio
+								for(var j:int = 0; j < panelCompetencias.numChildren; j++)
+								{
+									if(panelCompetencias.getChildAt(j) is HBox)
+									{
+										var hb:HBox = panelCompetencias.getChildAt(j) as HBox;
+										var criterio:Criterio = new Criterio();
+										hb.addChild(criterio);
+										// Actualizamos el tamaño
+										criterio.width = panelTitulos.getChildAt(1).width;
+										criterio.setNumCompetencias(j+1, this.numCompetencias);
+										// Añadimos la nueva instancia del criterio
+										(criterios.getItemAt(i) as TituloCriterio).addCriterio(criterio);
+									}
+								}
+							}
+							this.numCriterios = num;
+						}	
+						else if(num < numCriterios)
+						{
+							for(var i:int = numCriterios; i > num; i--)
+							{
+								panelTitulos.removeChildAt(i);
+								criterios.removeItemAt(i-1);
+								// Por cada competencia debemos eliminar un criterio
+								for(var j:int = 0; j < panelCompetencias.numChildren; j++)
+								{
+									if(panelCompetencias.getChildAt(j) is HBox)
+									{
+										var hb:HBox = panelCompetencias.getChildAt(j) as HBox;
+										hb.removeChildAt(i);
+									}
+								}
+							}
+							this.numCriterios = num;
+						}
+					}
+					else
+					{
+						this.numCriterios = num;
+						for(var i:int = 0; i < num; i++)
+						{
+							var tc:TituloCriterio = new TituloCriterio();
+							panelTitulos.addChild(tc);
+							tc.setLetra(i);
+							criterios.addItem(tc);
+						}
+					}
+				}
+			}
+			
+			public function setNumCompetencias(num:int)
+			{
+				if(num > 0)
+				{
+					// Si ya existían competencias asignadas
+					if(this.numCompetencias > 0)
+					{
+						// Si ahora hay más
+						if(num > numCompetencias)
+						{
+							// Debemos añadir las nuevas competencias
+							for(var i:int = numCompetencias; i < num; i++)
+							{
+								// Añadimos una HBox para almacenar las competencias
+								var hb:HBox = new HBox();
+								this.panelCompetencias.addChild(hb);
+								hb.setStyle("horizontalGap", 0);
+								// El primer elemento a añadir es la competencia
+								var competencia:Competencia = new Competencia();
+								competencias.addItem(competencia);
+								hb.addChild(competencia);
+								competencia.setNum(i+1);
+								competencia.addEventListener(Event.RESIZE, ajustarAltura);
+								// Añadimos los nuevos criterios
+								for(var j:int = 0; j < numCriterios; j++)
+								{
+									var criterio:Criterio = new Criterio();
+									hb.addChild(criterio);
+									criterio.width = panelTitulos.getChildAt(1).width;
+									criterio.setNumCompetencias(i+1, num);
+									// Añadimos la instancia del criterio
+									(criterios.getItemAt(j) as TituloCriterio).addCriterio(criterio);
+								}
+							}
+							// Ahora actualizamos las que ya existían
+							for(var i:int = 0; i < numCompetencias; i++)
+							{
+								if(this.panelCompetencias.getChildAt(i) is HBox)
+								{
+									var hb:HBox = this.panelCompetencias.getChildAt(i) as HBox;
+									for(var j:int = 0; j < hb.numChildren; j++)
+									{
+										if(hb.getChildAt(j) is Criterio)
+										{
+											var criterio:Criterio = hb.getChildAt(j) as Criterio;
+											criterio.actualizar(num);
+										}
+									}
+								}
+							}
+							this.numCompetencias = num;
+						}
+						// Si ahora hay menos
+						else if(num < numCompetencias)
+						{
+							// Debemos eliminar las competencias que sobran
+							for(var i:int = numCompetencias-1; i >= num; i--)
+							{
+								this.panelCompetencias.removeChildAt(i);
+								competencias.removeItemAt(i);
+								// Eliminamos para cada criterio la instancia asociada a la competencia
+								for(var j:int = 0; j < this.criterios.length; j++)
+								{
+									(criterios.getItemAt(j) as TituloCriterio).removeCriterioAt(i);
+								}
+							}
+							// Ahora actualizamos las que quedan
+							for(var i:int = 0; i < num; i++)
+							{
+								if(this.panelCompetencias.getChildAt(i) is HBox)
+								{
+									var hb:HBox = this.panelCompetencias.getChildAt(i) as HBox;
+									for(var j:int = 0; j < hb.numChildren; j++)
+									{
+										if(hb.getChildAt(j) is Criterio)
+										{
+											var criterio:Criterio = hb.getChildAt(j) as Criterio;
+											criterio.actualizar(num);
+										}
+									}
+								}
+							}
+							this.numCompetencias = num;
+						}
+					}
+					else
+					{
+						this.numCompetencias = num;
+						if(numCriterios > 0)
+						{
+							for(var i:int = 0; i < num; i++)
+							{
+								// Añadimos una HBox para almacenar las competencias
+								var hb:HBox = new HBox();
+								this.panelCompetencias.addChild(hb);
+								hb.setStyle("horizontalGap", 0);
+								// El primer elemento a añadir es la competencia
+								var competencia:Competencia = new Competencia();
+								competencias.addItem(competencia);
+								//competencia.setNum(i);
+								hb.addChild(competencia);
+								competencia.setNum(i+1);
+								competencia.addEventListener(Event.RESIZE, ajustarAltura);
+								for(var j:int = 0; j < numCriterios; j++)
+								{
+									var criterio:Criterio = new Criterio();
+									hb.addChild(criterio);
+									criterio.setNumCompetencias(i+1, this.numCompetencias);
+									// Añadimos la instancia al array de criterios
+									(criterios.getItemAt(j) as TituloCriterio).addCriterio(criterio);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			public function setPadre(padre:MatrizDecision):void
+			{
+				this.padre = padre;
+			}
+			
+			public function getPadre():MatrizDecision
+			{
+				return this.padre;
+			}
+			
+			public function actualizarTamanyos(event:Event):void
+			{
+				// Recorremos los criterios en busca de los tamaños más grandes y actualizamos
+				var tamanyos:ArrayCollection = new ArrayCollection();
+				for(var i:int = 0; i < numCriterios; i++)
+				{
+					tamanyos.addItem(TituloCriterio.getMinWidth());
+				}
+				for(var i:int = 0; i < this.criterios.length; i++)
+				{
+					var tc:TituloCriterio = criterios.getItemAt(i) as TituloCriterio;
+					if((tamanyos.getItemAt(i) as Number) < tc.getAnchura())
+					{
+						tamanyos.removeItemAt(i);
+						tamanyos.addItemAt(tc.getAnchura(), i);
+					}
+				}
+				for(var i:int = 0; i < panelCompetencias.numChildren; i++)
+				{
+					if(panelCompetencias.getChildAt(i) is HBox)
+					{
+						var hb:HBox = panelCompetencias.getChildAt(i) as HBox;
+						for(var j:int = 1; j < hb.numChildren; j++)
+						{
+							if(hb.getChildAt(j) is Criterio)
+							{
+								var criterio:Criterio = hb.getChildAt(j) as Criterio;
+								if((tamanyos.getItemAt(j-1) as Number) < criterio.getAnchura())
+								{
+									tamanyos.removeItemAt(j-1);
+									tamanyos.addItemAt(criterio.getAnchura(), j-1);
+								}
+							}
+						}
+					}
+				}
+				// Una vez tenemos los tamaños, actualizamos
+				// Primero los títulos
+				for(var i:int = 1; i < this.panelTitulos.numChildren; i++)
+				{
+					if(this.panelTitulos.getChildAt(i) is TituloCriterio)
+					{
+						//if((panelTitulos.getChildAt(i) as TituloCriterio).width < (tamanyos.getItemAt(i-1) as int))
+						//{
+							(panelTitulos.getChildAt(i) as TituloCriterio).width = tamanyos.getItemAt(i-1) as int;
+						//}
+					}
+				}
+				// Ahora los criterios
+				for(var i:int = 0; i < panelCompetencias.numChildren; i++)
+				{
+					if(panelCompetencias.getChildAt(i) is HBox)
+					{
+						var hb:HBox = panelCompetencias.getChildAt(i) as HBox;
+						for(var j:int = 1; j < hb.numChildren; j++)
+						{
+							if(hb.getChildAt(j) is Criterio)
+							{
+								//if((tamanyos.getItemAt(j-1) as int) > hb.getChildAt(j).width)
+								//{
+									hb.getChildAt(j).width = tamanyos.getItemAt(j-1) as int;
+								//}
+							}
+						}
+					}
+				}
+			}
+			
+			private function ajustarAltura(event:Event):void
+			{
+				var competencia:Competencia = event.currentTarget as Competencia;
+				if(competencia.getAltura() > competencia.minHeight)
+				{
+					var contenedor:HBox = competencia.parent as HBox;
+					for(var i:int = 0; i < contenedor.getChildren().length; i++)
+					{
+						if(contenedor.getChildAt(i) != competencia)
+						{
+							contenedor.getChildAt(i).height = competencia.getAltura();
+						}
+					}
+				}
+			}
+			
+			public function getNumCompetencias():int
+			{
+				return this.competencias.length;
+			}
+			
+			public function getNumCriterios():int
+			{
+				return this.criterios.length;
+			}
+			
+			public function getCompetenciaAt(index:int):Competencia
+			{
+				return this.competencias.getItemAt(index) as Competencia;
+			}
+			
+			public function getCriterioAt(index:int):TituloCriterio
+			{
+				return this.criterios.getItemAt(index) as TituloCriterio;
+			}
+			
+			/**
+			 * Devuelve los resultados para cada criterio en un array
+			 */
+			public function getResultados():ArrayCollection
+			{
+				return criterios;
+			}
+			
+			public function getNombresCompetencias():ArrayCollection
+			{
+				var nombres:ArrayCollection = new ArrayCollection();
+				for(var i:int = 0; i < competencias.length; i++)
+				{
+					nombres.addItem(getCompetenciaAt(i).getName());
+				}
+				return nombres;
+			}
+			
+			public function toXML(nivel:int):String
+			{
+				var texto:String = "";
+				// Primero añadimos las competencias
+				texto += Common.tabs(nivel) + "<Competences>\n";
+				for(var i:int = 0; i < competencias.length; i++)
+				{
+					texto += (competencias.getItemAt(i) as Competencia).toXML(nivel + 1);
+				}
+				texto += Common.tabs(nivel) + "</Competences>\n";
+				// Finalmente añadimos los criterios
+				texto += Common.tabs(nivel) + "<Criterions>\n";
+				for(var i:int = 0; i < criterios.length; i++)
+				{
+					texto += (criterios.getItemAt(i) as TituloCriterio).toXML(nivel + 1);
+				}
+				texto += Common.tabs(nivel) + "</Criterions>\n";
+				return texto;
+			}
+			
+			public function setVistaEvaluacion():void
+			{
+				for(var i:int = 0; i < this.criterios.length; i++)
+				{
+					this.getCriterioAt(i).setVistaEvaluacion();
+				}
+				for(var i:int = 0; i < this.competencias.length; i++)
+				{
+					this.getCompetenciaAt(i).setVistaEvaluacion();
+				}
+			}
+			
+			public function ajustarTamanyo(evaluacion:Boolean=false):void
+			{
+				if(evaluacion)
+				{
+					for(i = 0; i < this.competencias.length; i++)
+					{
+						this.getCompetenciaAt(i).ajustarAltura();
+					}
+				}
+				for(var i:int = 0; i < this.criterios.length; i++)
+				{
+					this.getCriterioAt(i).ajustarTamanyo();
+				}
+				for(var i:int = 0; i < panelCompetencias.numChildren; i++)
+				{
+					if(panelCompetencias.getChildAt(i) is HBox)
+					{
+						var hb:HBox = panelCompetencias.getChildAt(i) as HBox;
+						for(var j:int = 1; j < hb.numChildren; j++)
+						{
+							if(hb.getChildAt(j) is Criterio)
+							{
+								(hb.getChildAt(j) as Criterio).ajustarTamanyo();
+							}
+						}
+					}
+				}
+			}
+			
+			public function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				// Recorremos los títulos de los criterios por si hay alguno vacío
+				for(var i:int = 0; i < this.criterios.length; i++)
+				{
+					if(this.getCriterioAt(i).getName() == null || Common.trim(this.getCriterioAt(i).getName()) == "")
+					{
+						advertencias.addItem(resourceManager.getString("myBundle", "warning_criterion_name") + "\n" + this.localization());
+					}
+				}
+				// Recorremos los títulos de las competencias por si hay alguno vacío
+				for(var i:int = 0; i < this.competencias.length; i++)
+				{
+					if(this.getCompetenciaAt(i).getName() == null || Common.trim(this.getCompetenciaAt(i).getName()) == "")
+					{
+						advertencias.addItem(resourceManager.getString("myBundle", "warning_competence_name") + "\n" + this.localization());
+					}
+				}
+				
+			}
+			
+			public function getErrores(errores:ArrayCollection):void
+			{
+				
+			}
+			
+			private function localization():String
+			{
+				var localizacion:String =
+				resourceManager.getString("myBundle", "decision_matrix") + ":" + this.getPadre().getName();
+				return localizacion;
+			}
+		]]>
+	</mx:Script>
+	
+</mx:VBox>

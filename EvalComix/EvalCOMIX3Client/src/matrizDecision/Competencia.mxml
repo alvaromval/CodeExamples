@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" minHeight="60" horizontalGap="0">
+	<mx:Label id="labelNum" text="1" height="100%" width="50" textAlign="center" fontWeight="bold" fontSize="14"/>
+	<mx:TextArea id="textCompetencia" width="200" minHeight="60" borderStyle="solid" textAlign="left" text="@Resource(bundle='myBundle', key='competence_text')"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import utilidades.Common;
+			use namespace mx_internal;
+			
+			public function getName():String
+			{
+				return this.textCompetencia.text;
+			}
+			
+			public function setName(nombre:String):void
+			{
+				this.textCompetencia.text = nombre;
+			}
+			
+			public function setNum(num:int):void
+			{
+				this.labelNum.text = num.toString();
+			}
+			
+			public function getNum():int
+			{
+				return parseInt(this.labelNum.text);
+			}
+			
+			public function setCompetencia(text:String):void
+			{
+				this.textCompetencia.text = text;
+			}
+			
+			public function toXML(nivel:int):String
+			{
+				var texto:String = "";
+				texto += Common.tabs(nivel) + '<CompetenceDescription name="' + this.getName() + '"/>\n';
+				return texto;
+			}
+			
+			public function setVistaEvaluacion():void
+			{
+				this.textCompetencia.editable = false;
+				this.textCompetencia.validateNow();
+				var altura:Number = this.textCompetencia.getTextField().textHeight + this.textCompetencia.getLineMetrics(0).height;
+				if(altura > this.minHeight)
+				{
+					this.textCompetencia.height = altura;
+				}
+			}
+			
+			public function ajustarAltura():void
+			{
+				this.textCompetencia.validateNow();
+				var altura:Number = this.textCompetencia.getTextField().textHeight + this.textCompetencia.getLineMetrics(0).height;
+				if(altura > this.minHeight)
+				{
+					this.textCompetencia.height = altura;
+				}
+			}
+			
+			public function getAltura():Number
+			{
+				return this.textCompetencia.height;
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

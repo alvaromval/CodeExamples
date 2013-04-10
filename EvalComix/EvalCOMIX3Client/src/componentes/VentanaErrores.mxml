@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="top" horizontalAlign="center" xmlns:ns1="editorVisual.componentes.*" layout="vertical" title="Ventana de errores/advertencias" showCloseButton="true" close="cerrar()" width="600">
+	<mx:Label id="labelErrores" text="@Resource(bundle='myBundle', key='num_errors')" fontWeight="bold"/>
+	<mx:Canvas width="550" height="200" maxHeight="200" borderStyle="solid">
+		<mx:VBox id="panelErrores" verticalGap="0" width="500" borderStyle="none" horizontalAlign="center" x="25">
+		</mx:VBox>
+	</mx:Canvas>
+	<mx:Label id="labelAdvertencias" text="@Resource(bundle='myBundle', key='num_warnings')" fontWeight="bold"/>
+	<mx:Canvas width="550" height="200" maxHeight="200" borderStyle="solid">
+		<mx:VBox id="panelAdvertencias" verticalGap="0" width="500" borderStyle="none" horizontalAlign="center" x="25">
+		</mx:VBox>
+	</mx:Canvas>
+	<mx:HBox width="100%" height="30" verticalAlign="middle" horizontalAlign="center">
+		<mx:Button label="@Resource(bundle='myBundle', key='close')" click="cerrar()" x="4" y="4" cornerRadius="0"/>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+		
+			private var numErrores:int = 0;
+			private var numAdvertencias:int = 0;
+			
+			public function setErrores(errores:ArrayCollection)
+			{
+				numErrores = errores.length;
+				labelErrores.text += " " + numErrores;
+				for(var i:int = 0; i < errores.length; i++)
+				{
+					var me:MensajeError = new MensajeError();
+					panelErrores.addChild(me);
+					me.setMensaje(errores.getItemAt(i).toString());
+					//panelErrores.height += me.getAltura();
+				}
+			}
+			
+			public function setAdvertencias(advertencias:ArrayCollection)
+			{
+				numAdvertencias = advertencias.length;
+				labelAdvertencias.text += " " + numAdvertencias;
+				for(var i:int = 0; i < advertencias.length; i++)
+				{
+					var ma:MensajeAdvertencia = new MensajeAdvertencia();
+					panelAdvertencias.addChild(ma);
+					ma.setMensaje(advertencias.getItemAt(i).toString());
+					//panelAdvertencias.height += ma.getAltura();
+				}
+			}
+			
+			private function cerrar():void
+			{
+				PopUpManager.removePopUp (this);
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

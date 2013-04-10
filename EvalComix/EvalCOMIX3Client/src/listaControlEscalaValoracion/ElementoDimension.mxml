@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" minWidth="1000">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			public var dimension:Dimension = null;
+			public var porcentaje:Number = -1;
+		
+			public function setDimension(dimension:Dimension):void
+			{
+				this.dimension = dimension;
+			}
+			
+			public function getDimension():Dimension
+			{
+				return this.dimension;
+			}
+			
+			public function setPorcentaje(porcentaje:int):void
+			{
+			}
+			
+			public function getPorcentajeText():int
+			{
+				return -1;
+			}
+			
+			public function getPorcentaje():Number
+			{
+				return this.porcentaje;
+			}
+			
+			public function getNota():Number
+			{
+				return -1;
+			}
+			
+			public function actualizarNota(event:Event=null):void
+			{
+				dimension.actualizarNota();
+			}
+			
+			public function toXML(nivel:int):String
+			{
+				return "";
+			}
+			
+			public function ajustarLongitud(longitud:int, index:int, grupo:int=0):void
+			{
+			}	
+			
+			public function ajustarTamanyo(evaluacion:Boolean=false):void
+			{
+			}	
+			
+			public function setVistaEvaluacion():void
+			{
+			}
+			
+			public function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				
+			}
+			
+			public function getErrores(errores:ArrayCollection):void
+			{
+				
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

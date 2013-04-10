@@ -1,0 +1,135 @@
+
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="../../css/style.css" title="default">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>Evaluaci&oacute;n</title></head><body>
+<table style="width: 1577px; height: 599px;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; width: 290px; background-color: white;"><big style="font-family: Calibri; font-weight: bold;">Manual de
+ayuda de EvalCOMIX 3:</big><br>
+<ol style="font-family: Calibri;">
+</ol>
+<ul style="font-family: Calibri;">
+<li><a href=".">Introducci&oacute;n</a></li>
+<li><a href="terminologia.htm">Terminolog&iacute;a</a></li>
+<li><a href="listadecontrol.htm">Lista de
+control</a></li>
+<li><a href="escaladevaloracion.htm">Escala
+de valoraci&oacute;n</a></li>
+<li><a href="listaescala.htm">Lista de
+control + Escala de valoraci&oacute;n</a></li>
+<li><a href="rubrica.htm">R&uacute;brica</a></li>
+<li><a href="matriz.htm">Matriz de decisi&oacute;n</a></li>
+<li><a href="mixta.htm">Herramienta mixta</a></li>
+<li style="width: 250px;"><a href="modificacion.htm">Modificaci&oacute;n de un instrumento ya
+creado</a><br>
+</li>
+<li style="width: 250px; font-weight: bold;">Valoraci&oacute;n</li>
+<li style="width: 250px;"><a href="porcentajes.htm">Asignaci&oacute;n de porcentajes a los
+elementos</a></li>
+<li style="width: 250px;"><a href="exportar.htm">Exportar
+un instrumento ya creado</a></li>
+<li style="width: 250px;"><a href="importar.htm">Importar
+un instrumento desde un fichero</a></li>
+<li style="width: 250px;"><a href="participantes.htm">Participantes</a></li>
+<li style="width: 250px;"><a href="ApiEvalComix3.0.pdf">API de EvalCOMIX, manual de
+integraci&oacute;n</a></li>
+</ul>
+<div style="margin-left: 40px;"><a href="http://avanza.uca.es/assessmentservice"><img style="border: 0px solid ; width: 257px; height: 83px;" alt="EvalCOMIX 3" src="img/cabecera.jpg"></a></div>
+<ol style="font-family: Calibri;">
+</ol>
+</td>
+<td style="vertical-align: top; background-color: rgb(235, 235, 235); width: 1279px;"><big style="font-family: Calibri; font-weight: bold;">Valoraci&oacute;n:</big><br>
+<br>
+<div style="margin-left: 40px;"><span style="font-family: Calibri;">Todos los instrumentos creados
+son puntuables a excepci&oacute;n de la Matriz de Decisi&oacute;n, que es un
+instrumento encaminado<br>
+a la toma de decisiones.<br>
+<br>
+La valoraci&oacute;n de los instrumentos se realiza sobre la vista de valoraci&oacute;n de los mismos, que suele ser muy parecida a <br>
+la de edici&oacute;n pero desapareciendo todas las opciones de edici&oacute;n.<br>
+<br>
+Por ejemplo en el caso de una escala de valoraci&oacute;n, la pantalla de
+edici&oacute;n presenta el siguiente aspecto:<br>
+<img style="width: 1141px; height: 711px;" alt="Pantalla de edici&oacute;n escala de valoraci&oacute;n" src="img/evaluacion0.png"><br>
+La vista de valoraci&oacute;n tendr&aacute; el siguiente aspecto:<br>
+<img style="width: 1153px; height: 669px;" alt="Pantalla evaluacion escala de valoraci&oacute;n" src="img/evaluacion1.png"><br>
+<br>
+Cuando tenemos una pantalla de valoraci&oacute;n, lo &uacute;nico que podemos
+modificar son los atributos y valoraciones globales de la misma.<br>
+Estableciendo los valores adecuados seg&uacute;n nuestra valoraci&oacute;n:<br>
+<img style="width: 1157px; height: 669px;" alt="Pantalla evaluacion escala de valoraci&oacute;n" src="img/evaluacion2.png"><br>
+Seg&uacute;n modificamos estos valores, podremos ver como aumenta la nota, que
+aparece en la casilla superior derecha del instrumento.<br>
+<img style="width: 1148px; height: 663px;" alt="Pantalla de eval" src="img/evaluacion3.png"><br>
+En
+todos los instrumentos los valores van de 0 a 100, divididos entre el
+n&uacute;mero de valores que haya, por ejemplo, en el ejemplo superior<br>
+tenemos
+6 valores en la subdimensi&oacute;n, por lo que el valor "Valor0" valdr&aacute; 0%,
+"Valor1" 16% ... "Valor5" 100%. Los valores son relativos <br>
+al porcentaje de valor del elemento al que pertenecen, en este caso
+cada atributo, dentro de la subdimensi&oacute;n vale un 16%.<br>
+<br>
+Los porcentajes son relativos siempre a elementos del mismo nivel y su
+suma es el 100% del elemento al que pertenecen:<br>
+Ve&aacute;moslo en el ejemplo anterior:<br>
+La dimensi&oacute;n y la valoraci&oacute;n global -&gt; ambos valen un 50% del
+instrumento<br>
+</span><span style="font-family: Calibri;">La
+subdimensi&oacute;n -&gt; al exisitir solo una subdimensi&oacute;n dentro de la
+dimensi&oacute;n, esta valdr&aacute; un 100%&nbsp; de la dimensi&oacute;n</span><br>
+<span style="font-family: Calibri;">Los atributos de
+la subdimensi&oacute;n -&gt; todos valen un 16%&nbsp;de la subdimensi&oacute;n<br>
+(Los porcentajes siempre pueden ser modificados por el usuario)<br>
+<img style="width: 1155px; height: 660px;" alt="Pantalla de evaluaci&oacute;n de la escala de valoraci&oacute;n" src="img/evaluacion4.png"><br>
+Vamos a analizar este caso concreto:<br>
+1. Si tenemos todos los atributos de la subdimensi&oacute;n al m&aacute;ximo
+("Valor5" en este caso), la subdimensi&oacute;n valdr&aacute; un 100%<br>
+2. Como la subdimensi&oacute;n en este caso es el 100% de la dimensi&oacute;n (al
+haber solo una), la dimensi&oacute;n vale un 100%<br>
+3. Si la valoraci&oacute;n global tiene marcado el valor m&iacute;nimo "Valor0" en
+este caso, valdr&aacute; un 0%<br>
+4. La nota final sera de 50, ya que la dimensi&oacute;n vale 100 y la
+valoraci&oacute;n global vale 0 (ya cada una es un 50% del instrumento):<br>
+<img style="width: 1143px; height: 662px;" alt="Evalauci&oacute;n" src="img/evaluacion5.png"><br>
+<br>
+</span><span style="font-family: Calibri;">IMPORTANTE:
+Si queremos que el resultado quede almacenado debemos guardar siempre
+los cambios realizados.</span><br>
+<span style="font-family: Calibri;"><br>
+<span style="font-weight: bold;"><a name="#rubrica">Valoraci&oacute;n de
+r&uacute;bricas</a></span><br>
+<br>
+El caso de las r&uacute;bricas es ligeramente diferente ya que los valores
+introducidos tienen definido el valor final, por lo que no hay que
+seguir una escala<br>
+ascendente, simplemente, la "casilla" marcada tiene el valor que
+aparece a su izquierda.<br>
+<br>
+Por ejemplo, en la siguiente r&uacute;brica tenemos tres valores: Mal, Regular
+y Bien.<br>
+Mal puede tomar los valores 0 y 20<br>
+Regular los valores: 30, 40 y 50<br>
+Bien puede tomar los valores: 70 y 100<br>
+<img style="width: 1142px; height: 799px;" alt="Pantalla edici&oacute;n r&uacute;brica" src="img/evaluacion6.png"><br>
+En este caso, si marcamos 20, el valor del atributo ser&aacute; 20 (despu&eacute;s
+habr&aacute; que tener en cuenta su porcentaje, el porcentaje de la
+subidmensi&oacute;n etc.<br>
+como se ha explicado anteriormente), si marcamos 100 ser&aacute; 100, etc. Por
+lo que las r&uacute;bricas no est&aacute;n limitadas por escalas ascendentes simples
+como el resto de <br>
+instrumentos, pudiendo especificar cualquier rango de valores que
+queramos, comprendidos siempre entre 0 y 100.<br>
+<br>
+<br>
+<br>
+<br>
+</span><span style="font-family: Calibri;"></span></div>
+</td>
+</tr>
+</tbody>
+</table>
+</body></html>

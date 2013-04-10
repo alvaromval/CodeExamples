@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" height="144" borderStyle="solid" alpha="1.0" backgroundColor="#FADBB6" color="#000000" borderColor="#FFFFFF" backgroundAlpha="0.0" verticalScrollPolicy="off" creationCompleteEffect="{fadeOn}" removedEffect="{fadeOff}">
+	<mx:Fade id="fadeOn" 
+    	alphaFrom="0.0"
+    	alphaTo="1.0"
+    />
+    <mx:Fade id="fadeOff" 
+    	alphaFrom="1.0"
+    	alphaTo="0.0"
+    />
+	<mx:Label x="3" y="-1" text="@Resource(bundle='myBundle', key='value')" fontWeight="bold"/>
+	<mx:TextInput id="nombre" x="2" y="17" change="integridadTexto(event)"/>
+	<mx:Label x="3" y="47" text="@Resource(bundle='myBundle', key='n_values')"/>
+	<mx:TextInput id="numVal" x="0" y="73" width="64" restrict="/0-9/"/>
+	<mx:Button id="buttonAnyadir" x="72" y="73" width="30" icon="@Embed(source='../img/iconDown.gif')" cornerRadius="0" click="insertar()"/>
+	<mx:HBox id="panel" x="0" y="103" width="100%" height="30" backgroundColor="#FADBB6" alpha="1.0" backgroundAlpha="0.0">
+	</mx:HBox>
+	<mx:initialize>
+		<![CDATA[
+			// Inicializamos el array de valores para los combobox de valores
+			for(var i:int = 0; i <= 100; i++)
+			{
+				valoresCombo.push(i);	
+			}
+		
+			// Añadimos automáticamente dos valores por defecto (0 y 1)
+			var ti1:ComboBox = new ComboBox();
+			ti1.dataProvider = valoresCombo;
+			ti1.setStyle("cornerRadius", 0);
+			panel.addChild(ti1);
+			valores.addItem(ti1);
+			ti1.width = 61;
+			//ti1.text = "0";
+			ti1.selectedIndex = 0;
+			
+			var ti2:ComboBox = new ComboBox();
+			ti2.dataProvider = valoresCombo;
+			ti2.setStyle("cornerRadius", 0);
+			panel.addChild(ti2);
+			valores.addItem(ti2);
+			ti2.width = 61;
+			//ti2.text = "1";
+			ti2.selectedIndex = 0;
+			
+			this.numVal.text = "2";
+		]]>
+	</mx:initialize>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ListEvent;
+			import mx.controls.ComboBox;
+			import utilidades.Common;
+			import mx.controls.Alert;
+			import mx.controls.Label;
+			import mx.collections.ArrayCollection;
+			
+			private var valoresCombo:Array = new Array();
+			private var valores:ArrayCollection = new ArrayCollection();
+			private var valoresArr:ArrayCollection = new ArrayCollection(); // Array con referencias a las casillas de valor de las subdimensiones
+			private var atributos:ArrayCollection = new ArrayCollection();
+			private var dimension:Dimension = null;
+			
+			public function setName(name:String):void
+			{
+				this.nombre.text = name;
+			}
+			
+			public function getName():String
+			{
+				return this.nombre.text;
+			}
+			
+			public function setNumVals(numVals:int):void
+			{
+				this.numVal.text = numVals.toString();
+			}
+			
+			public function getNumVals():int
+			{
+				return this.valores.length;
+			}
+			
+			private function insertar():void
+			{
+				if(parseInt(this.numVal.text) > 0)
+				{
+					var numValores:int = parseInt(this.numVal.text);
+					if(valores.length < numValores)
+					{
+						// Si añadimos nuevos valores
+						// Insertamos los valores
+						for(var i:int = valores.length; i < numValores; i++)
+						{
+							/*var ti:TextInput = new TextInput();
+							panel.addChild(ti);
+							valores.addItem(ti);
+							ti.width = 30;
+							ti.text = i.toString();*/
+							var ti:ComboBox = new ComboBox();
+							ti.dataProvider = valoresCombo;
+							ti.setStyle("cornerRadius", 0);
+							panel.addChild(ti);
+							valores.addItem(ti);
+							ti.width = 61;
+							//ti.text = i.toString();
+							ti.selectedIndex = 0;
+							
+							// Ahora debemos actualizar los atributos
+							/*for(var j:int = 0; j < atributos.length; j++)
+							{
+								var atr:Atributo = atributos.getItemAt(j);
+								atr.actualizarCasillaValor();
+							}*/
+						}
+					}
+					else
+					{
+						// Si quitamos valores
+						if(valores.length > numValores)
+						{
+							// Insertamos los valores
+							for(var i:int = valores.length-1; i >= numValores; i--)
+							{
+								panel.removeChildAt(i);
+								valores.removeItemAt(i);
+							}
+							// Ahora debemos actualizar los atributos
+							/*for(var j:int = 0; j < atributos.length; j++)
+							{
+								var atr:Atributo = atributos.getItemAt(j);
+								atr.actualizarCasillaValor();
+							}*/
+						}
+					}
+				}
+			}
+			
+			public function insertarValores(valoresArray:ArrayCollection):void
+			{
+				// Primero quitamos los valores por defecto
+				for(var i:int = this.valores.length-1; i >= 0; i--)
+				{
+					panel.removeChildAt(i);
+					valores.removeItemAt(i);
+				}
+				// Ahora insertamos los nuevo valores
+				for(var i:int = 0; i < valoresArray.length; i++)
+				{
+					/*var ti:TextInput = new TextInput();
+					panel.addChild(ti);
+					valores.addItem(ti);
+					ti.width = 30;
+					ti.text = valoresArray.getItemAt(i).toString();*/
+					var ti:ComboBox = new ComboBox();
+					ti.dataProvider = valoresCombo;
+					ti.setStyle("cornerRadius", 0);
+					panel.addChild(ti);
+					valores.addItem(ti);
+					ti.width = 61;
+					//ti.text = i.toString();
+					ti.selectedIndex = parseInt(valoresArray.getItemAt(i).toString());
+				}
+			}
+			
+			public function getValores():ArrayCollection
+			{
+				return valores;
+			}
+			
+			/**
+			 * Función que modifica a la vez todos los campos de valor en el mismo índice
+			 */
+			private function integridadTexto(event:Event):void
+			{
+				var texto:TextInput = event.currentTarget as TextInput;
+				var index:int = -1;
+				var actual:int = -1;
+				texto.validateNow();
+				texto.width = texto.textWidth+20;
+				for(var i:int = 0; i < valoresArr.length; i++)
+				{
+					var lb:Label = valoresArr.getItemAt(i) as Label;
+					lb.text = this.nombre.text;
+				}
+			}
+			
+			public function anyadirValorRef(lb:Label):void
+			{
+				this.valoresArr.addItem(lb);
+			}
+			
+			public function eliminarValorRef(index:int):void
+			{
+				this.valoresArr.removeItemAt(index);
+			}
+			
+			public function setAtributos(atributos:ArrayCollection):void
+			{
+				this.atributos = atributos;
+			}
+			
+			public function anyadirAtributo(atributo:Atributo):void
+			{
+				this.atributos.addItem(atributo);
+			}
+			
+			public function eliminarAtributo(index:int):void
+			{
+				this.atributos.removeItemAt(index);
+			}
+			
+			private function actualizarToolTips():void
+			{
+				for(var i:int = 0; i < valoresArr.length; i++)
+				{
+					var vl:Label = valoresArr.getItemAt(i) as Label;
+					//vl.toolTip = descripcion.text;
+				}
+			}
+			
+			public function setDimension(dimension:Dimension):void
+			{
+				this.dimension = dimension;
+			}
+			
+			public function getDimension():Dimension
+			{
+				return this.dimension;
+			}
+			
+			/**
+			 * Función que transforma la clase en un objeto XML
+			 */
+			public function toXML(nivel:int):String
+			{
+				// Construimos el texto XML
+				var texto:String = Common.tabs(nivel) + '<Value name="' + this.nombre.text + '" instances="' + panel.getChildren().length + '">\n';
+				// Concatenamos los XML de los atributos
+				for(var i:int = 0; i < panel.getChildren().length; i++)
+				{
+					var valor:String = (panel.getChildAt(i) as ComboBox).text;
+					texto+= Common.tabs(nivel+1) + "<instance>" + valor + "</instance>" + "\n";
+				}
+				// Cerramos el XML
+				texto+= Common.tabs(nivel) + "</Value>";
+				return texto;
+			}
+			
+			public function setVistaEvaluacion():void
+			{
+				nombre.editable = false;
+				this.numVal.editable = false;
+				buttonAnyadir.visible = false;
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

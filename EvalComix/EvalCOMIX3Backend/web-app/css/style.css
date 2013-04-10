@@ -1,0 +1,17 @@
+body {
+	font-family: Calibri;
+	font-size:12pt;
+	color: black;
+	background: #EDEDED;
+}
+
+table {
+	font-family: Calibri;
+	font-size:12pt;
+	color: black;
+}
+
+a:link {text-decoration:none; color: #005D7F; font-weight:bold;}
+a:visited {text-decoration:none; color:#005D7F; font-weight:bold;}
+a:active {text-decoration:none; color:#005D7F; font-weight:bold;}
+a:hover {text-decoration:underline; color:#D57306; font-weight:bold;}

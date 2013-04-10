@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="middle" horizontalAlign="center" title="@Resource(bundle='myBundle', key='window_selection')" width="462">
+	<mx:Label text="@Resource(bundle='myBundle', key='instrument_add')" fontSize="11" fontWeight="bold"/>
+	<mx:VBox id="panelSelecciones">
+		<!--<mx:RadioButton label="@Resource(bundle='myBundle', key='value_list_selection')" groupName="instrumentos" value="value_list" selected="true"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='control_list_selection')" groupName="instrumentos" value="control_list"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='control_list_value_list_selection')" groupName="instrumentos" value="control_list_value_list"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='rubric_selection')" groupName="instrumentos" value="rubric"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='semantic_differential_selection')" groupName="instrumentos" value="semantic_differential"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='decision_matrix_selection')" groupName="instrumentos" value="decision_matrix"/>
+		<mx:RadioButton label="@Resource(bundle='myBundle', key='mix_selection')" groupName="instrumentos" value="mix"/>-->
+	</mx:VBox>
+	<mx:HBox width="100%" height="100%">
+	</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Button label="@Resource(bundle='myBundle', key='accept')" cornerRadius="0" click="aceptar()"/>
+		<mx:HBox width="100%">
+		</mx:HBox>
+		<mx:Button label="@Resource(bundle='myBundle', key='cancel')" cornerRadius="0" click="cancelar()"/>
+	</mx:HBox>
+	<mx:RadioButtonGroup id="instrumentos"/>
+	<mx:initialize>
+		<![CDATA[
+			this.crearSelecciones();
+		]]>
+	</mx:initialize>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.RadioButton;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.core.Application;
+			import utilidades.Constants;
+			private var seleccion:String = null;
+			
+			private function crearSelecciones():void
+			{
+				// Añadimos una selección por cada tipo de instrumento
+				for(var i:int = 0; i < Constants.instrumentos.length; i++)
+				{
+					var rb:RadioButton = new RadioButton();
+					panelSelecciones.addChild(rb);
+					rb.label = resourceManager.getString("myBundle", Constants.instrumentos[i][1]);
+					rb.value = Constants.instrumentos[i][0];
+					if(i == 0)
+					{
+						rb.selected = true;
+					}
+					rb.group = this.instrumentos;
+				}
+			}
+			
+			public function getSeleccion():String
+			{
+				return this.seleccion;
+			}
+			
+			private function aceptar():void
+			{
+				// Cogemos la selección
+				seleccion = instrumentos.selectedValue.toString();
+	   			cerrar();
+			}
+			
+			private function cancelar():void
+			{
+				seleccion = null;
+				cerrar();
+			}
+			
+			private function cerrar():void
+			{
+				PopUpManager.removePopUp(this);
+			}			
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

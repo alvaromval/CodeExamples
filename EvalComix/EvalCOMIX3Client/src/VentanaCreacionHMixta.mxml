@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="600" height="400" title="@Resource(bundle='myBundle', key='window_mix_creation')" horizontalAlign="center" verticalAlign="middle">
+	<mx:HBox width="100%" height="100%">
+		<mx:VBox width="45%" height="100%" horizontalAlign="center" verticalAlign="middle">
+			<mx:Text text="@Resource(bundle='myBundle', key='mix_creation_selection')"/>
+			<mx:List id="listaTipos" width="100%" height="100%" change="habilitarAnyadir()"></mx:List>
+			<mx:Button id="buttonAnyadir1" label="@Resource(bundle='myBundle', key='add')" cornerRadius="0" click="anyadir()" enabled="false"/>
+		</mx:VBox>
+		<mx:VBox width="10%" height="100%" horizontalAlign="center" verticalAlign="middle">
+			<mx:Button id="buttonAnyadir2" cornerRadius="0" width="22" height="22" icon="@Embed(source='img/iconDerecha.gif')" click="anyadir()" enabled="false"/>
+		</mx:VBox>
+		<mx:VBox width="45%" height="100%" verticalAlign="middle" horizontalAlign="center">
+			<mx:Text text="@Resource(bundle='myBundle', key='mix_creation_list')"/>
+			<mx:List id="listaMixta" height="100%" width="100%" change="habilitarEliminarAceptar()"></mx:List>
+			<mx:Button id="buttonEliminar" label="@Resource(bundle='myBundle', key='remove')" cornerRadius="0" click="eliminar()" enabled="false"/>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:Button id="buttonAceptar" label="@Resource(bundle='myBundle', key='accept')" cornerRadius="0" click="aceptar()"/>
+	<mx:Script>
+		<![CDATA[
+			import diferencialSemantico.DiferencialSemantico;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import matrizDecision.MatrizDecision;
+			import rubrica.Rubrica;
+			import listaControlEscalaValoracion.ListaControlEscalaValoracion;
+			import escalaValoracion.EscalaValoracion;
+			import listaControl.ListaControl;
+			import mixta.HerramientaMixta;
+			import utilidades.Common;
+			import utilidades.Constants;
+			import mx.collections.ArrayCollection;
+			private var instrumentos:ArrayCollection = null;
+			private var instrumentosMixta:ArrayCollection = null;
+			private var ventana:VentanaGenerica = null;
+			
+			public function inicializar(ventana:VentanaGenerica):void
+			{
+				this.ventana = ventana;
+				instrumentos = new ArrayCollection();
+				// Añadimos los instrumentos
+				for(var i:int = 0; i < Constants.instrumentos.length; i++)
+				{
+					instrumentos.addItem(resourceManager.getString("myBundle", Constants.instrumentos[i][1]));
+				}
+				instrumentosMixta = new ArrayCollection();
+				this.listaTipos.dataProvider = instrumentos;
+				this.listaMixta.dataProvider = instrumentosMixta;
+			}
+			
+			private function anyadir():void
+			{
+				if(listaTipos.selectedItem)
+				{
+					var aux:String = listaTipos.selectedItem.toString();
+					instrumentosMixta.addItem(aux);
+				}
+			}
+			
+			private function eliminar():void
+			{
+				if(listaMixta.selectedItem)
+				{
+					instrumentosMixta.removeItemAt(listaMixta.selectedIndex);
+				}
+			}
+			
+			private function habilitarAnyadir():void
+			{
+				if(listaTipos.selectedItem)
+				{
+					this.buttonAnyadir1.enabled = true;
+					this.buttonAnyadir2.enabled = true;
+				}
+				else
+				{
+					this.buttonAnyadir1.enabled = false;
+					this.buttonAnyadir2.enabled = false;
+				}
+			}
+			
+			private function habilitarEliminarAceptar():void
+			{
+				if(listaTipos.selectedItem)
+				{
+					this.buttonEliminar.enabled = true;
+				}
+				else
+				{
+					this.buttonEliminar.enabled = false;
+				}
+			}
+			
+			private function aceptar():void
+			{
+				if(instrumentosMixta.length > 0)
+				{
+					this.ventana.anyadirInstrumento(new HerramientaMixta());
+					var hm:HerramientaMixta = this.ventana.getInstrumento() as HerramientaMixta;
+					for(var i:int = 0; i < instrumentosMixta.length; i++)
+					{
+						hm.setInstrumento(Common.crearInstrumentoPorNombre(instrumentosMixta.getItemAt(i).toString()));
+						/*
+						if(instrumentosMixta.getItemAt(i) == resourceManager.getString("myBundle", "control_list_selection"))
+						{
+							hm.setInstrumento(new ListaControl());
+						}
+						else if(instrumentosMixta.getItemAt(i) == resourceManager.getString("myBundle", "value_list_selection"))
+						{
+							hm.setInstrumento(new EscalaValoracion());
+						}
+						else if(instrumentosMixta.getItemAt(i) == resourceManager.getString("myBundle", "control_list_value_list_selection"))
+						{
+							hm.setInstrumento(new ListaControlEscalaValoracion());
+						}
+						else if(instrumentosMixta.getItemAt(i) == resourceManager.getString("myBundle", "rubric_selection"))
+						{
+							hm.setInstrumento(new Rubrica());
+						}
+						else if(instrumentosMixta.getItemAt(i) == resourceManager.getString("myBundle", "semantic_differential_selection"))
+						{
+							hm.setInstrumento(new DiferencialSemantico());
+						}
+						else if(instrumentosMixta.getItemAt(i) == resourceManager.getString("myBundle", "decision_matrix_selection"))
+						{
+							hm.setInstrumento(new MatrizDecision());
+						}
+						*/
+					}
+					PopUpManager.removePopUp(this);
+				}
+				else
+				{
+					Alert.show(resourceManager.getString("myBundle", "warning_mix_creation"), resourceManager.getString("myBundle", "warning"));
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

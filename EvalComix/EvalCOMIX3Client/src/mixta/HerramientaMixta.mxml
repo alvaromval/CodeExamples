@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstrumentoEvaluacion xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" borderStyle="none" borderColor="#0C6D05" backgroundColor="#D2E7C9">
+	<mx:VBox minWidth="1200">
+		<mx:Button id="buttonBorrar" click="borrar()" width="12" cornerRadius="0" icon="@Embed(source='../img/iconClose2.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+			<mx:HBox verticalAlign="top" paddingLeft="10" id="encabezado" minWidth="1200">
+				<mx:Label text="{resourceManager.getString('myBundle', 'mix') + ':'}" fontWeight="bold" />
+				<mx:TextArea id="nomHerramienta" text="@Resource(bundle='myBundle', key='title')" width="200"/>
+				<mx:Label id="labelAnyadir" text="@Resource(bundle='myBundle', key='add_instrument')"/>
+				<mx:Button id="buttonInsertar" x="862" y="10" width="30" cornerRadius="0" click="anyadirInstrumento()">
+					<mx:icon>@Embed(source='../img/iconDown.gif')</mx:icon>
+				</mx:Button><mx:Label text="@Resource(bundle='myBundle', key='grade')" fontWeight="bold"/>
+				<mx:TextInput width="40" id="notaText" color="#FFFFFF" backgroundColor="#000000" text="0" fontWeight="bold" textAlign="right"  updateComplete="actualizarNotaPadre()"/>
+				<mx:HBox id="panelPorcentaje" width="100%" height="100%" visible="false">
+					<mx:Label text="@Resource(bundle='myBundle', key='percentage')" toolTip="@Resource(bundle='myBundle', key='help_percentage')" id="LabelPorcentaje"/>
+					<mx:TextInput width="34" maxChars="3" id="porcentajeText" backgroundColor="#000000" color="#00F00F" fontFamily="Verdana" fontWeight="bold" textAlign="right" restrict="/0-9/"/>
+					<mx:Button id="buttonPorcentaje" width="18" cornerRadius="0" icon="@Embed(source='../img/iconPrctg.gif')" click="insertarPorcentaje(0, event);"/>
+				</mx:HBox>
+			</mx:HBox>
+			<mx:HBox width="100%" paddingLeft="10" id="panelDescripcion">
+				<mx:Label text="@Resource(bundle='myBundle', key='instrument_description')" fontWeight="bold"/>
+				<mx:Button icon="@Embed(source='../img/iconRevisar.gif')" width="20" height="20" cornerRadius="0" id="buttonDescripcion" click="verDescripcion()"/>
+			</mx:HBox>
+			<mx:VBox id="contenedor" width="100%" paddingLeft="20" paddingRight="10">
+			</mx:VBox>
+			<mx:Button id="buttonAnyadir" click="anyadir()" x="1" y="44" width="12" cornerRadius="0" icon="@Embed(source='../img/iconAnyadir.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+		<mx:Script>
+			<![CDATA[
+				import flash.utils.getDefinitionByName;
+				import diferencialSemantico.DiferencialSemantico;
+				import utilidades.VentanaAnyadirInstrumento;
+				import escalaValoracion.EscalaValoracion;
+				import mx.managers.PopUpManager;
+				import mx.core.Application;
+				import rubrica.Rubrica;
+				import listaControlEscalaValoracion.ListaControlEscalaValoracion;
+				import listaControl.ListaControl;
+				import utilidades.Common;
+				import matrizDecision.MatrizDecision;
+				import mx.collections.ArrayCollection;
+				import utilidades.Constants;
+				import mx.controls.Alert;
+				use namespace mx_internal;
+				
+				private var instrumentos:ArrayCollection = new ArrayCollection(); // Array con referencias a los instrumentos añadidos
+				private var index:int = -1; // Índice del instrumento actual dentro de la herramienta mixta
+				
+			
+				public function setInstrumento(instrumento:InstrumentoEvaluacion, importando:Boolean=false, index:int=-1):void
+				{
+					if(index != -1)
+					{
+						instrumentos.addItemAt(instrumento, index);
+						instrumento.setStyle("borderStyle", "solid");
+						this.contenedor.addChildAt(instrumento, index);
+					}
+					else
+					{
+						instrumentos.addItem(instrumento);
+						instrumento.setStyle("borderStyle", "solid");
+						this.contenedor.addChild(instrumento);
+					}
+					// Añadimos los botones de edición para un instrumento dentro de una herramienta mixta (añadir, borrar y porcentaje)
+					instrumento.setVistaHerramientaMixta();
+					if(!importando)
+					{
+						if(instrumento.getPorcentaje() == -1)
+						{
+							instrumento.insertarPorcentaje(100/this.getNumInstrumentos());
+						}
+					}
+				}
+				
+				public function eliminarInstrumento(instrumento:InstrumentoEvaluacion):void
+				{
+					// Si el instrumento está dentro de la herramienta mixta
+					if(instrumentos.contains(instrumento))
+					{
+						// Lo eliminamos
+						instrumentos.removeItemAt(instrumentos.getItemIndex(instrumento));
+						this.contenedor.removeChild(instrumento);
+						// Actualizamos los porcentajes del resto de instrumentos
+						var total:int = 0;
+						var ies:ArrayCollection = this.getInstrumentosEvaluables();
+						for(var i:int = 0; i < ies.length; i++)
+						{
+							total += (ies.getItemAt(i) as InstrumentoEvaluacion).getPorcentaje();
+						}
+						if(total > 0)
+						{
+							for(var i:int = 0; i < ies.length; i++)
+							{
+								var ie:InstrumentoEvaluacion = ies.getItemAt(i) as InstrumentoEvaluacion;
+								if(ie.getPorcentaje() != -1)
+								{
+									var newPorcentaje:int = (ie.getPorcentaje()/total) * 100;
+									ie.setPorcentaje(newPorcentaje);
+								}
+							}
+						}
+						else if(total == 0)
+						{
+							for(var i:int = 0; i < ies.length; i++)
+							{
+								var ie:InstrumentoEvaluacion = ies.getItemAt(i) as InstrumentoEvaluacion;
+								ie.setPorcentaje(100/ies.length);
+							}		
+						}
+						// Actualizamos la nota
+						actualizarNota();
+					}
+				}
+				
+				public function anyadirInstrumento(index:int=-1):void
+				{
+					this.index = index;
+					var vai:VentanaAnyadirInstrumento = VentanaAnyadirInstrumento(PopUpManager.createPopUp(Application.application.getVentana(), VentanaAnyadirInstrumento, true));
+					PopUpManager.centerPopUp(vai);
+					vai.addEventListener(Event.REMOVED, manejadorAnyadir);
+				}
+				
+				private function manejadorAnyadir(event:Event):void
+				{
+					if(event.currentTarget is VentanaAnyadirInstrumento)
+					{
+						var vai:VentanaAnyadirInstrumento = event.currentTarget as VentanaAnyadirInstrumento;
+						if(vai.getSeleccion() != null)
+						{
+							for(var i:int = 0; i < Constants.instrumentos.length; i++)
+							{
+								if(vai.getSeleccion() == Constants.instrumentos[i][0])
+								{
+									var miClase:Class = Class(getDefinitionByName(Constants.instrumentos[i][0]));
+									setInstrumento(new miClase() as InstrumentoEvaluacion);
+								}
+							}
+							/*
+							if(vai.getSeleccion() == Constants.ESCALA_VALORACION)
+							{
+								setInstrumento(new EscalaValoracion(), false, index);
+							}
+							else if(vai.getSeleccion() == Constants.LISTA_CONTROL)
+							{
+								setInstrumento(new ListaControl(), false, index);
+							}
+							else if(vai.getSeleccion() == Constants.LISTA_CONTROL_ESCALA_VALORACION)
+							{
+								setInstrumento(new ListaControlEscalaValoracion(), false, index);
+							}
+							else if(vai.getSeleccion() == Constants.RUBRICA)
+							{
+								setInstrumento(new Rubrica(), false, index);
+							}
+							else if(vai.getSeleccion() == Constants.SEMANTIC_DIFFERENTIAL)
+							{
+								setInstrumento(new DiferencialSemantico(), false, index);
+							}
+							else if(vai.getSeleccion() == Constants.MATRIZ_DECISION)
+							{
+								setInstrumento(new MatrizDecision(), false, index);
+							}
+							else if(vai.getSeleccion() == Constants.MIXTA)
+							{
+								setInstrumento(new HerramientaMixta(), false, index);
+							}
+							*/
+						}
+					}
+				}
+				
+				public function getIndexInstrumento(instrumento:InstrumentoEvaluacion):int
+				{
+					return this.instrumentos.getItemIndex(instrumento);
+				}
+				
+				public function getNumInstrumentos():int
+				{
+					var num:int = 0;
+					for(var i:int = 0; i < this.instrumentos.length; i++)
+					{
+						if(!(this.instrumentos.getItemAt(i) is MatrizDecision))
+						{
+							num++;
+						}
+					}
+					return num;
+				}
+				
+				public function getInstrumentos():ArrayCollection
+				{
+					return this.instrumentos;
+				}
+				
+				/**
+				 * Devuelve los instrumentos evaluables (no incluye las matrices de decisión)
+				 */
+				public function getInstrumentosEvaluables():ArrayCollection
+				{
+					var evaluables:ArrayCollection = new ArrayCollection();
+					for(var i:int = 0; i < this.instrumentos.length; i++)
+					{
+						if(!(this.instrumentos.getItemAt(i) is MatrizDecision))
+						{
+							evaluables.addItem(this.instrumentos.getItemAt(i));
+						}
+					}
+					return evaluables;
+				}
+				
+				public override function setName(nombre:String):void
+				{
+					this.nomHerramienta.text = nombre;
+				}
+				
+				public override function getName():String
+				{
+					return this.nomHerramienta.text;
+				}
+				
+				public override function toXML(child:Boolean=false):String
+				{
+					if(child)
+					{
+						var texto:String = '<MixTool name="' + this.getName() + '" instruments="' + this.instrumentos.length + '"';
+						if(this.getPorcentaje() > -1)
+						{
+							texto += ' percentage="' + this.getPorcentaje() + '">\n';
+						}
+						else
+						{
+							texto += '>\n';
+						}
+						// Descripción del instrumento
+						if(this.getDescripcion())
+						{
+							texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+						}
+						for(var i:int = 0; i < this.instrumentos.length; i++)
+						{
+							texto += (instrumentos.getItemAt(i) as InstrumentoEvaluacion).toXML(true);
+						}
+						texto += "</MixTool>";
+						return texto;
+					}
+					else
+					{
+						var texto:String = '<mt:MixTool xmlns:mt="' + Constants.MIX_TOOL_NS + '"' +
+						'\nxmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+						'\nxsi:schemaLocation="' + Constants.MIX_TOOL_NS + ' ' + Constants.MIX_TOOL_XSD + '"' + 
+						'\nname="' + this.getName() + '" instruments="' + this.instrumentos.length + '">' + "\n";
+						// Descripción del instrumento
+						if(this.getDescripcion())
+						{
+							texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+						}
+						for(var i:int = 0; i < this.instrumentos.length; i++)
+						{
+							texto += (instrumentos.getItemAt(i) as InstrumentoEvaluacion).toXML(true);
+						}
+						texto += "</mt:MixTool>";
+						return texto;
+					}
+				}
+				
+				public override function getNota():int
+				{
+					var nota:Number = 0;
+					var numInstrumentos:int = 0;
+					var instrumentosEvaluables:ArrayCollection = this.getInstrumentosEvaluables();
+					for(var i:int = 0; i < instrumentosEvaluables.length; i++)
+					{
+						var aux:InstrumentoEvaluacion = instrumentosEvaluables.getItemAt(i) as InstrumentoEvaluacion;
+						nota += aux.getNota()*aux.getPorcentaje()/100;
+						//nota = (nota*(instrumentosEvaluables.getItemAt(i) as InstrumentoEvaluacion).getPorcentaje())/100;
+					
+					}
+					/*if(instrumentos.length > 0)
+					{
+						nota = nota/instrumentos.length;
+					}*/
+					return Common.redondear(nota*100/getPorcentajeTotal());
+				}
+				
+				public override function actualizarNota(event:Event=null):void
+				{
+					this.notaText.text = getNota().toString();
+				}
+				
+				public override function setPorcentaje(porcentaje:int):void
+				{
+					if(porcentaje <= 100 && porcentaje >= 0)
+					{
+						super.setPorcentaje(porcentaje);
+						this.porcentajeText.text = porcentaje.toString();
+					}
+				}
+				
+				public override function getPorcentajeText():int
+				{
+					return parseInt(porcentajeText.text);
+				}
+				
+				public override function setPorcentajeText(porcentaje:String):void
+				{
+					this.porcentajeText.text = porcentaje;
+				}
+				
+				public function getPorcentajeTotal():Number
+				{
+					var porcentajeTotal:Number = 0;
+					var instrumentosEvaluables:ArrayCollection = this.getInstrumentosEvaluables();
+					for(var i:int = 0; i < instrumentosEvaluables.length; i++)
+					{
+						porcentajeTotal += (instrumentosEvaluables.getItemAt(i) as InstrumentoEvaluacion).getPorcentaje();	
+					}
+					return porcentajeTotal;
+				}
+				
+				/**
+				 * Establece los porcentajes por defecto para cada una de las dimensiones
+				 */
+				public function setPorcentajesPorDefecto(porcentajeInstrumentos:int):void
+				{
+					// Si el porcentaje es menor que el valor por defecto
+					if(porcentajeInstrumentos < Constants.PORCENTAJE_MINIMO)
+					{
+						var porcentaje:int = (100/this.getInstrumentosEvaluables().length);
+						for(var i:int = 0; i < this.getInstrumentosEvaluables().length; i++)
+						{
+							var ins:InstrumentoEvaluacion = this.getInstrumentosEvaluables().getItemAt(i) as InstrumentoEvaluacion;
+							ins.setPorcentaje(porcentaje);
+						}	
+					}
+				}
+				
+				/**
+				 * Muestra las opciones de edición cuando un instrumento se encuentra dentro de otro
+				 */
+				public override function setVistaHerramientaMixta():void
+				{
+					this.buttonAnyadir.visible = true;
+					this.buttonBorrar.visible = true;
+					this.panelPorcentaje.visible = true;
+				}
+				
+				/**
+				 * Oculta las opciones de edición cuando un instrumento se encuentra dentro de otro
+				 */
+				public override function ocultarVistaHerramientaMixta():void
+				{
+					this.buttonAnyadir.visible = false;
+					this.buttonBorrar.visible = false;
+					//this.panelPorcentaje.visible = false;
+				}
+				
+				public override function setVistaEvaluacion():void
+				{
+					this.nomHerramienta.editable = false;
+					this.buttonPorcentaje.enabled = false;
+					this.porcentajeText.editable = false;
+					
+					// Ajustamos la altura de los campos de texto
+					var fuente:int = this.nomHerramienta.getStyle("fontSize");
+					//this.nomDim.setStyle("fontSize", fuente+2); 
+					this.nomHerramienta.setStyle("fontStyle", "italic");
+					// Ponemos en negrita el título
+					this.nomHerramienta.setStyle("fontWeight", "bold");
+					this.nomHerramienta.validateNow();
+					// Ajustamos la anchura del título hasta un máximo
+					var altura:Number = this.nomHerramienta.getTextField().textHeight;
+					while(this.nomHerramienta.getTextField().textHeight > this.nomHerramienta.getStyle("fontSize")*2 && this.nomHerramienta.width < 600)
+					{
+						this.nomHerramienta.width = this.nomHerramienta.width*(1.1);
+					}
+					this.nomHerramienta.validateNow();
+					this.nomHerramienta.height = this.nomHerramienta.getTextField().textHeight + this.nomHerramienta.getLineMetrics(0).height;
+				
+					// Eliminamos los elementos sobrantes
+					if(encabezado.contains(this.labelAnyadir))encabezado.removeChild(this.labelAnyadir);
+					if(encabezado.contains(this.buttonInsertar))encabezado.removeChild(this.buttonInsertar);
+					
+					for(var i:int = 0; i < this.instrumentos.length; i++)
+					{
+						(instrumentos.getItemAt(i) as InstrumentoEvaluacion).setVistaEvaluacion();
+					}
+					
+					// Si es el caso, ocultamos la vista mixta
+					this.ocultarVistaHerramientaMixta();
+				}
+				
+				public override function ajustarTamanyo(evaluacion:Boolean=false):void
+				{
+					if(evaluacion)
+					{
+						// Ajustamos la altura de los campos de texto
+						this.nomHerramienta.validateNow();
+						this.nomHerramienta.height = this.nomHerramienta.getTextField().textHeight + this.nomHerramienta.getLineMetrics(0).height;
+					}
+					for(var i:int = 0; i < this.instrumentos.length; i++)
+					{
+						(instrumentos.getItemAt(i) as InstrumentoEvaluacion).ajustarTamanyo(evaluacion);
+					}
+				}
+				
+				public override function getAdvertencias(advertencias:ArrayCollection):void
+				{
+					// Comprobamos el nombre
+					if(this.getName() == null || Common.trim(this.getName()) == "")
+					{
+						advertencias.addItem(resourceManager.getString("myBundle", "warning_instrument_name") + "\n" + this.localization());
+					}
+					// Comprobamos los elementos
+					for(var i:int = 0; i < this.getInstrumentos().length; i++)
+					{
+						(this.getInstrumentos().getItemAt(i) as InstrumentoEvaluacion).getAdvertencias(advertencias);
+					}
+					// Comprobamos el porcentaje
+					if(this.getHerramientaMixta() != null)
+					{
+						if(this.getPorcentaje() == 0)
+						{
+							advertencias.addItem(resourceManager.getString("myBundle", "warning_instrument_percentage") + "\n" + this.localization());
+						}
+					}
+				}
+				
+				public override function getErrores(errores:ArrayCollection):void
+				{
+					// Comprobamos si está vacía
+					if(this.getInstrumentos() == null || this.getInstrumentos().length == 0)
+					{
+						errores.addItem(resourceManager.getString("myBundle", "error_instrument_empty") + "\n" + this.localization());
+					}
+					// Comprobamos los atributos
+					for(var i:int = 0; i < this.getInstrumentos().length; i++)
+					{
+						(this.getInstrumentos().getItemAt(i) as InstrumentoEvaluacion).getErrores(errores);
+					}
+				}
+				
+				private function localization():String
+				{
+					var localizacion:String =
+					resourceManager.getString("myBundle", "mix") + ":" + this.getName();
+					return localizacion;
+				}
+						
+			]]>
+		</mx:Script>
+	</mx:VBox>
+</InstrumentoEvaluacion>

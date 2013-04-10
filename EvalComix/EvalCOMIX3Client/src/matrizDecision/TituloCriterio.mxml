@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" height="60" minWidth="250" width="250">
+	<mx:Label id="labelTitulo" x="0" y="0" text="@Resource(bundle='myBundle', key='actor')" width="100%" textAlign="center"/>
+	<mx:TextInput id="titulo" change="integridadTamanyo()" x="0" y="28" height="32" text="@Resource(bundle='myBundle', key='name')" textAlign="center" width="100%"/>
+	<mx:Script>
+		<![CDATA[
+			import utilidades.Common;
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import mx.utils.StringUtil;
+			
+			private var letra:String = 'A';
+			
+			private var numCriterio = 0;
+			
+			private var criterios:ArrayCollection = new ArrayCollection();
+			
+			public function getName():String
+			{
+				return this.titulo.text;
+			}
+			
+			public function setName(nombre:String):void
+			{
+				this.titulo.text = nombre;
+				integridadTamanyo();
+			}
+			
+			public function addCriterio(criterio:Criterio):void
+			{
+				criterios.addItem(criterio);
+			}
+			
+			public function removeCriterioAt(index:int):void
+			{
+				criterios.removeItemAt(index);
+			}
+			
+			public function getCriterios():ArrayCollection
+			{
+				return this.criterios;
+			}
+			
+			public function getCriterioAt(index:int):Criterio
+			{
+				return criterios.getItemAt(index) as Criterio;
+			}
+			
+			public function setTitulo(text:String):void
+			{
+				this.titulo.text = text;
+			}
+			
+			public function getTitulo():TextInput
+			{
+				return this.titulo;
+			}
+			
+			public function setLetra(num:int):void
+			{
+				this.numCriterio = num;
+				if(num == 0)
+				{
+					labelTitulo.text += 'A';
+					letra = 'A';
+				}
+				else if(num == 1)
+				{
+					labelTitulo.text += 'B';
+					letra = 'B';
+				}
+				else if(num == 2)
+				{
+					labelTitulo.text += 'C';
+					letra = 'C';
+				}
+				else if(num == 3)
+				{
+					labelTitulo.text += 'D';
+					letra = 'D';
+				}
+				else if(num == 4)
+				{
+					labelTitulo.text += 'E';
+					letra = 'E';
+				}
+				else if(num == 5)
+				{
+					labelTitulo.text += 'F';
+					letra = 'F';
+				}
+				else if(num == 6)
+				{
+					labelTitulo.text += 'G';
+					letra = 'G';
+				}
+				else if(num == 7)
+				{
+					labelTitulo.text += 'H';
+					letra = 'H';
+				}
+				else if(num == 8)
+				{
+					labelTitulo.text += 'I';
+					letra = 'I';
+				}
+				else if(num == 9)
+				{
+					labelTitulo.text += 'J';
+					letra = 'J';
+				}
+				else if(num == 10)
+				{
+					labelTitulo.text += 'K';
+					letra = 'K';
+				}
+				else if(num == 11)
+				{
+					labelTitulo.text += 'L';
+					letra = 'L';
+				}
+				else if(num == 12)
+				{
+					labelTitulo.text += 'M';
+					letra = 'M';
+				}
+				else if(num == 13)
+				{
+					labelTitulo.text += 'N';
+					letra = 'N';
+				}
+				else if(num == 14)
+				{
+					labelTitulo.text += 'O';
+					letra = 'O';
+				}
+				else if(num == 15)
+				{
+					labelTitulo.text += 'P';
+					letra = 'P';
+				}
+				else if(num == 16)
+				{
+					labelTitulo.text += 'Q';
+					letra = 'Q';
+				}
+				else if(num == 17)
+				{
+					labelTitulo.text += 'R';
+					letra = 'R';
+				}
+				else if(num == 18)
+				{
+					labelTitulo.text += 'S';
+					letra = 'S';
+				}
+				else if(num == 19)
+				{
+					labelTitulo.text += 'T';
+					letra = 'T';
+				}
+				else if(num == 20)
+				{
+					labelTitulo.text += 'U';
+					letra = 'U';
+				}
+				else if(num == 21)
+				{
+					labelTitulo.text += 'V';
+					letra = 'V';
+				}
+				else if(num == 22)
+				{
+					labelTitulo.text += 'W';
+					letra = 'W';
+				}
+				else if(num == 23)
+				{
+					labelTitulo.text += 'X';
+					letra = 'X';
+				}
+				else if(num == 24)
+				{
+					labelTitulo.text += 'Y';
+					letra = 'Y';
+				}
+				else if(num == 25)
+				{
+					labelTitulo.text += 'Z';
+					letra = 'Z';
+				}
+			}
+			
+			public function getLetra():String
+			{
+				return this.letra;
+			}
+			
+			private function integridadTamanyo():void
+			{
+				titulo.validateNow();
+				var longitud:Number = titulo.textWidth+10;
+				if(longitud > this.minWidth)
+				{
+					this.width = longitud;
+					var event:Event = new Event(Event.RESIZE);
+					(this.parent.parent as Matriz).actualizarTamanyos(event);
+				}
+			}
+			
+			public function getAnchura():Number
+			{
+				titulo.validateNow();
+				return this.titulo.textWidth+10;
+			}
+			
+			/**
+			 * Función que devuelve los resultados de cada criterio para cada competencia
+			 */
+			public function getResultados():Array
+			{
+				var resultados:Array = new Array();
+				for(var i:int = 0; i < criterios.length; i++)
+				{
+					resultados.push(0);
+				}
+				for(var i:int = 0; i < criterios.length; i++)
+				{
+					for(var j:int = 0; j < criterios.length; j++)
+					{
+						/*var aux:int = (int)(resultados.getItemAt(j));
+						aux += getCriterioAt(i).obtenerResultadosCompetencia(j+1);
+						resultados.removeItemAt(j);
+						resultados.addItem(j)
+						//resultadoCompetencia += getCriterioAt(i).obtenerResultadosCompetencia(j+1);
+						*/
+						resultados[j] += getCriterioAt(i).obtenerResultadosCompetencia(j+1);
+					}
+				}
+				return resultados;
+			}
+			
+			public function setInstanciasCriterio(index:int, instancias:ArrayCollection):void
+			{
+				this.getCriterioAt(index).setInstancias(instancias);
+			}
+			
+			public function toXML(nivel:int):String
+			{
+				var texto:String = "";
+				texto += Common.tabs(nivel) + '<CriterionDescription name="' + this.getName() + '">\n';
+				for(var i:int = 0; i < this.criterios.length; i++)
+				{
+					texto += (criterios.getItemAt(i) as Criterio).toXML(nivel + 1);
+				}
+				texto += Common.tabs(nivel) + '</CriterionDescription>\n';
+				return texto;
+			}
+			
+						
+			public function setVistaEvaluacion():void
+			{
+				this.titulo.editable = false;
+			}
+			
+			public function ajustarTamanyo():void
+			{
+				this.integridadTamanyo();
+			}
+			
+			public static function getMinWidth():Number
+			{
+				return 250;
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

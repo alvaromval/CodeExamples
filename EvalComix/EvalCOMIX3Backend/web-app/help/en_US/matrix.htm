@@ -1,0 +1,119 @@
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+<link rel="stylesheet" type="text/css" href="../../css/style.css" title="default">
+<link rel="shortcut icon" href="../../favicon.ico">
+<title>Decision matrix</title></head>
+<body>
+<table style="width: 100%; height: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; width: 300px; background-color: white;"><big style="font-family: Calibri; font-weight: bold;">EvalCOMIX 3 Help Manual:</big><br>
+<ol style="font-family: Calibri;">
+</ol>
+<ul style="font-family: Calibri;">
+<li><a href=".">Introduction</a></li><li><a href="terminology.htm">Terminology</a></li>
+<li><a href="controllist.htm">Control list</a></li>
+<li><a href="valuelist.htm">List/set of
+values</a></li>
+<li><a href="controlvalue.htm">Control
+list+Value list</a></li>
+<li><a href="rubric.htm">Rubric</a></li>
+<li style="font-weight: bold;">Decision matrix</li>
+<li><a href="mix.htm">Mix tool</a></li>
+<li style="width: 250px;"><a href="modifying.htm">Modifying and instrument</a><br>
+</li>
+<li style="width: 250px;"><a href="assessment.htm">Assessment</a></li>
+<li style="width: 250px;"><a href="percentages.htm">Setting elements percentages</a></li>
+<li style="width: 250px;"><a href="exporting.htm">Exporting an instrument to a file</a></li>
+<li style="width: 250px;"><a href="importing.htm">Importing and instrument from a file</a></li><li style="width: 250px;"><a href="people.htm">People</a></li><li style="width: 250px;"><a href="ApiEvalComix3.0.pdf">API and integration manual</a></li>
+</ul><div style="margin-left: 40px;"><a href="http://avanza.uca.es/assessmentservice/main_en.gsp"><img style="border: 0px solid ; width: 257px; height: 83px;" alt="EvalCOMIX 3" src="img/cabecera.jpg"></a></div>
+<ol style="font-family: Calibri;">
+</ol>
+</td>
+<td style="width: 665px; vertical-align: top; background-color: rgb(235, 235, 235);"><big style="font-family: Calibri; font-weight: bold;">Decision
+matrix:</big><span style="font-family: Calibri;"><br>
+Una matriz de decisi&oacute;n no es un instrumento de evaluaci&oacute;n como tal. Es
+un instrumento que sirve para elegir una opci&oacute;n<br>
+entre una serie de opciones posibles, normalmente m&aacute;s de dos.
+Ponderando por igual todas.<br>
+<br>
+A decision matrix is not an assessment instrument at all. Is an
+instrument used to choose an option between a list of them,<br>
+normally two or more. &nbsp;Weigh them all.<br>
+</span><br>
+<div style="margin-left: 40px;"><span style="font-family: Calibri;"><span style="font-weight: bold;">Creating a decision matrix:</span><br>
+<br>
+To create a decision matrix you have to follow the next steps:<br>
+<br>
+An empty decision matrix is like this:<br>
+<img style="width: 971px; height: 85px;" alt="Decision Matrix 0" src="img/matrix0.png"><br>
+</span><span style="font-family: Calibri;"><br>
+In the decision matrix we have three fields: title, numbero fo
+competences and actors:<br>
+- Title: the matrix title<br>
+- N&ordm; competences: the number of optiones to weight, i.e, if we are
+weighting three cars, in order to choose one, each competence will be a
+car.<br>
+- N&ordm; actors: The people who participates in the decision, everyone will
+have to weight each option. <br>
+The option (competence) which has been selected more, will win.<br>
+<br>
+I.e, we are going to introduce three competences and two actors, then
+we press </span><span style="font-family: Calibri;"><img style="width: 30px; height: 22px;" alt="Bot&oacute;n insertar" src="img/insert_button.png">:</span><br>
+<span style="font-family: Calibri;"><img style="width: 1200px; height: 319px;" alt="Decision Matrix 1" src="img/matrix1.png"><br>
+<br>
+In order to make the example more easy to understand, we are going to
+assign concrete values to each element. <br>
+The three competences will be cars: Renault, Fiat and Ford. And the two
+actors will be Peter and Mary:<br>
+<img style="width: 1199px; height: 318px;" alt="Decision Matrix 2" src="img/matrix2.png"><br>
+By default the first options are selected.<br>
+<br>
+Now, we are going to fill the matrix with our selected values for each
+competence:<br>
+<img style="width: 1199px; height: 317px;" alt="Decision Matrix 3" src="img/matrix3.png"><br>
+<br>
+Let's see Peter results:<br>
+In the first cell he has selected 2 over 1, he chooses Fiat over
+Renault. He also has selected 1 over 3, he chooses Renault over Ford.<br>
+In the second cell he has selected 2 over 3, he chooses Fiat over Ford.<br>
+<br>
+Let's see Mary results:<br>
+</span><span style="font-family: Calibri;">In
+the first cell she has selected 1
+over 2, she chooses Renault over Fiat. She also has selected 3 over 1,
+she
+chooses Ford over Renault.<br>
+In the second cell she has selected 3 over 2, she chooses Ford over
+Fiat.</span><span style="font-family: Calibri;"><br>
+<br>
+The last cell (in this case Ford's cell) will be always empty, because
+it will always weight in the previous cells.<br>
+<br>
+To see the results, we have to press the button "Results" under the
+matrix:<br>
+<img style="width: 1201px; height: 482px;" alt="Decision Matrix 4" src="img/matrix4.png"><br>
+Los
+resultados arrojan que ha habido un triple empate entre los tres coches
+(como se pod&iacute;a intuir en el momento de analizar las opciones elegidas)
+aunque podemos<br>
+ver como el actor A (Pedro) ha marcado marcado m&aacute;s
+veces la opci&oacute;n de Fiat, mientras que el actor B (Mar&iacute;a) ha marcado m&aacute;s
+Ford. Pero por contra como ambos han<br>
+elegido 1 vez Renault, ha habido un triple empate.<br>
+<br>
+The results show a draw between the three competences, this is because
+the three has been selected the same times. But for Peter, wins
+competence number 2 (Fiat)<br>
+and for Mary wins competence number 3 (Ford), although the global
+results are the same for the three competences.<br>
+<br>
+</span><span style="font-family: Calibri;"></span><span style="font-family: Calibri;">WARNING: In order to update
+changes in the database, we always have to save changes before closing
+the instrument.</span><br>
+<span style="font-family: Calibri;"></span><span style="font-family: Calibri;"></span></div>
+</td>
+</tr>
+</tbody>
+</table>
+</body></html>

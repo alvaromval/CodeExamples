@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstrumentoEvaluacion xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" borderStyle="none" borderColor="#0C6D05" backgroundColor="#D2E7C9">
+	<mx:VBox minWidth="1200">
+	<mx:Button id="buttonBorrar" click="borrar()" width="12" cornerRadius="0" icon="@Embed(source='../img/iconClose2.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+	<mx:HBox id="encabezado" minWidth="1200" horizontalGap="12" x="14" y="12" paddingLeft="10">
+		<mx:Label x="14" y="12" text="{resourceManager.getString('myBundle', 'decision_matrix') + ':'}" fontWeight="bold" />
+		<mx:TextArea id="nomMatrix" x="138" y="10" width="250" text="@Resource(bundle='myBundle', key='title')"/>
+		<mx:Label id="LabelCompetencias" x="397" y="12" text="@Resource(bundle='myBundle', key='n_competences')" fontWeight="bold"/>
+		<mx:TextInput id="numCom" x="504" y="10" width="42" restrict="/0-9/"/>
+		<mx:Label id="LabelActores" x="555" y="12" text="@Resource(bundle='myBundle', key='n_actors')" fontWeight="bold"/>
+		<mx:TextInput id="numCri" x="629" y="10" width="42" restrict="/0-9/"/>
+		<mx:Button id="buttonInsertar" x="681" y="10" width="30" cornerRadius="0" click="insertar();">
+		<mx:icon>@Embed(source='../img/iconDown.gif')</mx:icon>
+		</mx:Button>
+	</mx:HBox>
+	<mx:HBox width="100%" paddingLeft="10" id="panelDescripcion">
+		<mx:Label text="@Resource(bundle='myBundle', key='instrument_description')" fontWeight="bold"/>
+		<mx:Button icon="@Embed(source='../img/iconRevisar.gif')" width="20" height="20" cornerRadius="0" id="buttonDescripcion" click="verDescripcion()"/>
+	</mx:HBox>
+	<mx:VBox id="panel" paddingLeft="80" width="100%" height="100%" horizontalAlign="left">
+	</mx:VBox>
+	<mx:Button id="buttonAnyadir" click="anyadir()" x="1" y="44" width="12" cornerRadius="0" icon="@Embed(source='../img/iconAnyadir.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12" visible="false"/>
+	<mx:Script>
+		<![CDATA[
+			import utilidades.Common;
+			import mx.collections.ArrayCollection;
+			import utilidades.Constants;
+			import mx.controls.Alert;
+			import mx.controls.Button;
+			use namespace mx_internal;
+		
+			private var matriz:Matriz = null;
+			private var tabla:TablaClasificacion = null;
+			
+			public override function getName():String
+			{
+				return this.nomMatrix.text;
+			}
+			
+			public override function setName(nombre:String):void
+			{
+				this.nomMatrix.text = nombre;
+			}
+			
+			public function setNumCompetencias(numCompetencias:int):void
+			{
+				this.numCom.text = numCompetencias.toString();
+			}
+			
+			public function getNumCompetencias():int
+			{
+				if(this.matriz != null)
+				{
+					return matriz.getNumCompetencias();
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			
+			public function setNumCriterios(numCriterios:int):void
+			{
+				this.numCri.text = numCriterios.toString();
+			}
+			
+			public function getNumCriterios():int
+			{
+				if(this.matriz != null)
+				{
+					return matriz.getNumCriterios();
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			
+			public function insertar():void
+			{
+				/*if(matriz == null)
+				{
+					matriz = new Matriz();
+					panel.addChild(matriz);
+					// Añadimos el botón de ver resultados
+					var bResultados:Button = new Button();
+					panel.addChild(bResultados);
+					bResultados.addEventListener(MouseEvent.CLICK, verResultados);
+					bResultados.setStyle("cornerRadius", 0);
+					bResultados.label = "Ver Resultados";
+					tabla = new TablaClasificacion();
+					panel.addChild(tabla)
+					
+				}
+				if(parseInt(numCom.text) > 0 && parseInt(numCri.text) > 0)
+				{
+					matriz.setNumCriterios(parseInt(numCri.text));
+					matriz.setNumCompetencias(parseInt(numCom.text));
+				}*/
+				var numCom:int = Common.parse_int(numCom.text);
+				var numCri:int = Common.parse_int(numCri.text);
+				if(numCom <= 0)
+				{
+					Alert.show(resourceManager.getString("myBundle","warning_num_competences"), resourceManager.getString("myBundle","warning"));
+				}
+				if(numCri <= 0)
+				{
+					Alert.show(resourceManager.getString("myBundle","warning_num_actors"), resourceManager.getString("myBundle","warning"));
+				}
+				insertarCompetenciasCriterios(numCom, numCri);
+			}
+			
+			public function insertarCompetenciasCriterios(numCompetencias:int, numCriterios:int):void
+			{
+				if(matriz == null)
+				{
+					matriz = new Matriz();
+					matriz.setPadre(this);
+					panel.addChild(matriz);
+					// Añadimos el botón de ver resultados
+					var bResultados:Button = new Button();
+					panel.addChild(bResultados);
+					bResultados.addEventListener(MouseEvent.CLICK, verResultados);
+					bResultados.setStyle("cornerRadius", 0);
+					bResultados.label = resourceManager.getString("myBundle", "results");//"Ver Resultados";
+					tabla = new TablaClasificacion();
+					panel.addChild(tabla)
+					
+				}
+				if(numCompetencias > 0 && numCriterios > 0)
+				{
+					matriz.setNumCriterios(numCriterios);
+					matriz.setNumCompetencias(numCompetencias);
+				}
+			}
+			
+			public function getMatriz():Matriz
+			{
+				return this.matriz;
+			}
+			
+			private function verXML():void
+			{
+				Alert.show(toXML());
+			}
+			
+			private function verResultados(event:MouseEvent):void
+			{
+				if(tabla == null)
+				{
+					tabla = new TablaClasificacion();
+					panel.addChild(tabla);
+					tabla.inicializar(matriz.getResultados(), matriz.getNombresCompetencias());//.getResultados(), matriz.getNumCompetencias());
+				}
+				else
+				{
+					panel.removeChild(tabla);
+					tabla = new TablaClasificacion();
+					panel.addChild(tabla);
+					tabla.inicializar(matriz.getResultados(), matriz.getNombresCompetencias());
+				}
+			}
+			
+			public override function toXML(child:Boolean=false):String
+			{
+				if(child)
+				{
+					var texto:String = "";
+					if(this.matriz != null)
+					{
+						texto += '<DecisionMatrix name="' + this.getName() + '" competences="' + this.matriz.getNumCompetencias() + '" criterions="' + this.matriz.getNumCriterios() + '">\n';
+						// Descripción del instrumento
+						if(this.getDescripcion())
+						{
+							texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+						}
+						texto += matriz.toXML(1);
+						texto += '</DecisionMatrix>\n';
+					}
+					else
+					{
+						texto += '<DecisionMatrix name="' + this.getName() + '" competences="0" criterions="0">\n';
+						// Descripción del instrumento
+						if(this.getDescripcion())
+						{
+							texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+						}
+						texto += '</DecisionMatrix>\n';
+					}
+					return texto; 	
+				}
+				else
+				{
+					var texto:String = "";
+					if(this.matriz != null)
+					{
+						texto += '<dm:DecisionMatrix xmlns:dm="' + Constants.DECISION_MATRIX_NS + '"' +
+						'\nxmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+						'\nxsi:schemaLocation="' + Constants.DECISION_MATRIX_NS + ' ' + Constants.DECISION_MATRIX_XSD + '"' + 
+						'\nname="' + this.getName() + '" competences="' + this.matriz.getNumCompetencias() + '" criterions="' + this.matriz.getNumCriterios() + '">\n';
+						// Descripción del instrumento
+						if(this.getDescripcion())
+						{
+							texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+						}
+						texto += matriz.toXML(1);
+						texto += '</dm:DecisionMatrix>\n';
+					}
+					else
+					{
+						texto += '<dm:DecisionMatrix xmlns:dm="' + Constants.DECISION_MATRIX_NS + '"' +
+						'\nxmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+						'\nxsi:schemaLocation="' + Constants.DECISION_MATRIX_NS + ' ' + Constants.DECISION_MATRIX_XSD + '"' + 
+						'\nname="' + this.getName() + '" competences="0" criterions="0">\n';
+						// Descripción del instrumento
+						if(this.getDescripcion())
+						{
+							texto += "<Description>" + this.getDescripcion() + "</Description>\n";
+						}
+						texto += '</dm:DecisionMatrix>\n';
+					}
+					return texto; 	
+				}
+			}
+			
+			/**
+			 * Muestra las opciones de edición cuando un instrumento se encuentra dentro de otro
+			 */
+			public override function setVistaHerramientaMixta():void
+			{
+				this.buttonAnyadir.visible = true;
+				this.buttonBorrar.visible = true;
+				//this.panelPorcentaje.visible = true;
+			}
+			
+			/**
+			 * Oculta las opciones de edición cuando un instrumento se encuentra dentro de otro
+			 */
+			public override function ocultarVistaHerramientaMixta():void
+			{
+				this.buttonAnyadir.visible = false;
+				this.buttonBorrar.visible = false;
+				//this.panelPorcentaje.visible = false;
+			}
+			
+			/**
+			 * Deshabilita las opciones de edición para mostrar la ventana de evaluación
+			 */
+			public override function setVistaEvaluacion():void
+			{
+				nomMatrix.editable = false;
+				numCom.editable = false;
+				numCri.editable = false;
+				buttonInsertar.visible = false;
+				
+				// Eliminamos los elementos sobrantes
+				if(encabezado.contains(this.LabelCompetencias))encabezado.removeChild(this.LabelCompetencias);
+				if(encabezado.contains(this.numCom))encabezado.removeChild(this.numCom);
+				if(encabezado.contains(this.LabelActores))encabezado.removeChild(this.LabelActores);
+				if(encabezado.contains(this.numCri))encabezado.removeChild(this.numCri);
+				
+				// Ajustamos la altura de los campos de texto
+				var fuente:int = this.nomMatrix.getStyle("fontSize");
+				//this.nomDim.setStyle("fontSize", fuente+2); 
+				this.nomMatrix.setStyle("fontStyle", "italic");
+				// Ponemos en negrita el título
+				this.nomMatrix.setStyle("fontWeight", "bold");
+				this.nomMatrix.validateNow();
+				// Ajustamos la anchura del título hasta un máximo
+				var altura:Number = this.nomMatrix.getTextField().textHeight;
+				while(this.nomMatrix.getTextField().textHeight > this.nomMatrix.getStyle("fontSize")*2 && this.nomMatrix.width < 600)
+				{
+					this.nomMatrix.width = this.nomMatrix.width*(1.1);
+				}
+				this.nomMatrix.validateNow();
+				this.nomMatrix.height = this.nomMatrix.getTextField().textHeight + this.nomMatrix.getLineMetrics(0).height;
+				
+				// Si es el caso, ocultamos la vista mixta
+				this.ocultarVistaHerramientaMixta();
+				
+				if(this.matriz != null)
+				{
+					this.matriz.setVistaEvaluacion();
+				}
+			}
+			
+			public override function ajustarTamanyo(evaluacion:Boolean=false):void
+			{
+				if(evaluacion)
+				{
+					this.nomMatrix.validateNow();
+					this.nomMatrix.height = this.nomMatrix.getTextField().textHeight + this.nomMatrix.getLineMetrics(0).height;	
+				}
+				this.matriz.ajustarTamanyo(evaluacion);
+			}
+			
+			public override function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				// Comprobamos si el título no se ha dejado vacío
+				if(this.getName() == null || Common.trim(this.getName()) == "")
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_instrument_name") + "\n" + this.localization());
+				}
+				// Comprobamos que haya más de un criterio
+				if(this.getNumCompetencias() == 1)
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_num_competences") + "\n" + this.localization());
+				}
+				// Comprobamos la matriz
+				this.getMatriz().getAdvertencias(advertencias);
+				
+			}
+			
+			public override function getErrores(errores:ArrayCollection):void
+			{
+				// Comprobamos que no esté vacía
+				if(this.getNumCompetencias() == 0 || this.getNumCriterios() == 0)
+				{
+					errores.addItem(resourceManager.getString("myBundle", "error_instrument_empty") + "\n" + this.localization());
+				}	
+				// Comprobamos los errores en la matriz
+				this.getMatriz().getErrores(errores);
+			}
+			
+			private function localization():String
+			{
+				var localizacion:String =
+				resourceManager.getString("myBundle", "decision_matrix") + ":" + this.getName();
+				return localizacion;
+			}
+		]]>
+	</mx:Script>	
+	</mx:VBox>
+</InstrumentoEvaluacion>

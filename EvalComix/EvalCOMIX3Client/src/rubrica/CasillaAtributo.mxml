@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" minWidth="220" borderStyle="solid" borderSides="right" x="85" y="7" paddingLeft="10" paddingRight="10" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:Label x="0" y="0" text="@Resource(bundle='myBundle', key='description')"/>
+	<mx:TextArea x="100" y="0" width="200" id="description"/>
+	<mx:VBox width="100%" height="100%">
+	</mx:VBox>
+	<mx:HBox width="100%" id="radioButtons" paddingBottom="5" height="40">
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ListEvent;
+			import mx.controls.ComboBox;
+			import mx.controls.RadioButtonGroup;
+			import mx.controls.Alert;
+			import mx.controls.Label;
+			import mx.controls.TextInput;
+			import mx.collections.ArrayCollection;
+			import mx.controls.RadioButton;
+			use namespace mx_internal;
+			
+			private var atributo:Atributo = null; // Atributo al que pertenece la casilla
+			private var titulo:Label = null;
+			private var vd:ValorDimension = null;
+			private var valoresArr:ArrayCollection = new ArrayCollection();
+			
+			public function insertar(vr:ValorDimension, titulo:Label, selected:Boolean=false):void
+			{
+				this.vd = vr;
+				for(var i:int = 0; i < vr.getValores().length; i++)
+				{
+					if(i == 0)
+					{
+						addRadioButton(i, vr.getValores().getItemAt(i) as ComboBox, selected);
+					}
+					else
+					{
+						addRadioButton(i, vr.getValores().getItemAt(i) as ComboBox);
+					}
+				}
+				this.titulo = titulo;
+				// Añadimos un listener para el tamaño del título
+				this.radioButtons.addEventListener(Event.RESIZE, actualizarTitulo);
+				// Añadimos un listener para el número de valores
+				this.vd.buttonAnyadir.addEventListener(MouseEvent.CLICK, actualizarValores);
+				
+				/*var array:ArrayCollection = vr.getValores();
+				for(i = 0; i < array.length; i++)
+				{
+					(array.getItemAt(i) as TextInput).addEventListener(Event.CHANGE, actualizarTexto);
+				}*/
+			}
+			
+			public function setAtributo(atributo:Atributo):void
+			{
+				this.atributo = atributo;
+			}
+			
+			public function getAtributo():Atributo
+			{
+				return this.atributo;
+			}
+			
+			private function addRadioButton(index:int, texto:ComboBox, selected:Boolean=false):void
+			{
+				var rb:RadioButton = new RadioButton();
+				this.radioButtons.addChild(rb);
+				rb.percentWidth = 100;
+				rb.value = index;
+				rb.group = (this.parent.parent as Atributo).valor;
+				rb.label = texto.text;//(vd.getValores().getItemAt(index) as ComboBox).text;
+				valoresArr.addItem(rb);
+				// Añadimos un listener para cada valor
+				texto.addEventListener(ListEvent.CHANGE, actualizarTexto);
+				rb.selected = selected;
+			}
+			
+			private function removeRadioButton(index:int):void
+			{
+				valoresArr.removeItemAt(index);
+				this.radioButtons.removeChildAt(index);
+			}
+			
+			private function actualizarTitulo(event:Event):void
+			{
+				/*if(titulo.textWidth < this.width)
+				{
+					titulo.width = this.width;
+				}*/
+				/*if(this.width > 260)
+				{
+					this.parent.width += this.width - 260;
+				}*/
+				/*if(radioButtons.width > this.width)
+				{
+					this.width = radioButtons.width + 2;
+					titulo.width = this.width;
+				}
+				else
+				{
+					if(this.width > this.radioButtons + 2)
+					{
+						this.width = 260;
+					}
+				}*/
+				if(titulo.width < this.width)
+				{
+					titulo.minWidth = this.width;
+				}
+			}
+			
+			private function actualizarValores(event:Event):void
+			{
+				var texto:String = vd.numVal.text;
+				if(parseInt(texto) > 0)
+				{
+					var newValores:int = parseInt(texto);
+					// Si se han añadido valores
+					if(newValores > valoresArr.length)
+					{
+						for(var i:int = valoresArr.length; i < newValores; i++)
+						{
+							addRadioButton(i, vd.getValores().getItemAt(i) as ComboBox);
+						}
+					}
+					else
+					{
+						// Si se han eliminado valores
+						if(newValores < radioButtons.getChildren().length)
+						{
+							for(var i:int = radioButtons.getChildren().length-1; i >= newValores; i--)
+							{
+								removeRadioButton(i);
+							}
+						}
+					}
+				}
+			}
+			
+			private function actualizarTexto(event:Event):void
+			{
+				var array:ArrayCollection = vd.getValores();
+				for(var i:int = 0; i < array.length; i++)
+				{
+					if(array.getItemAt(i) == event.currentTarget)
+					{
+						var texto:String = (event.currentTarget as ComboBox).text;
+						(this.valoresArr.getItemAt(i) as RadioButton).label = texto;
+					}
+				}
+				// Además aprovechamos para actualizar la nota
+				actualizarNota();
+				
+			}
+			
+			private function actualizarNota():void
+			{
+				getAtributo().actualizarNota();
+			}
+			
+			/**
+			 * Devuelve la descripción para el para atributo/valor
+			 */
+			public function getDescription():String
+			{
+				return this.description.text;
+			}
+			
+			/**
+			 * Selecciona un radio button de la casilla, determinado por el índice index
+			 */
+			public function select(index:int):void
+			{
+				(this.radioButtons.getChildAt(index) as RadioButton).selected = true;
+			}
+			
+			/**
+			 * Función que devuelve el valor seleccionado 
+			 * Si no hay ninguno seleccionado devuelve -1
+			 */
+			public function selected():int
+			{
+				for(var i:int = 0; i < this.radioButtons.numChildren; i++)
+				{
+					var rb:RadioButton = this.radioButtons.getChildAt(i) as RadioButton;
+					if(rb.selected)
+					{
+						return i;
+					}
+				}	
+				return -1;
+			}
+			
+			public function getValor():Number
+			{
+				for(var i:int = 0; i < this.radioButtons.numChildren; i++)
+				{
+					var rb:RadioButton = this.radioButtons.getChildAt(i) as RadioButton;
+					if(rb.selected)
+					{
+						//return ((i+1)/radioButtons.numChildren);
+						return (parseFloat(rb.label)/100);
+					}
+				}	
+				return 0;
+			}
+			
+			public function ajustarLongitud(longitud:int):void
+			{
+				this.minWidth = longitud;
+			}
+			
+			public function ajustarAltura():void
+			{
+				this.description.validateNow();
+				this.description.height = this.description.getTextField().textHeight + this.description.getLineMetrics(0).height;
+			}
+			
+			public function setVistaEvaluacion():void
+			{
+				description.editable = false;
+				this.description.validateNow();
+				this.description.height = this.description.getTextField().textHeight + this.description.getLineMetrics(0).height;
+			}
+			
+			public static function getWidth():int
+			{
+				return 220;
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

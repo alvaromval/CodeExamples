@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0" verticalScrollPolicy="off" borderStyle="solid" backgroundColor="#F1F2F1" minWidth="250" width="250" horizontalScrollPolicy="off" height="60">
+	<mx:HBox id="competencias1">
+	</mx:HBox>
+	<mx:HBox id="competencias2" resize="cambiarTamanyo(event);">
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import utilidades.Common;
+			import mx.controls.Alert;
+			import mx.controls.CheckBox;
+			import mx.collections.ArrayCollection;
+			private var competencias1Array:ArrayCollection = new ArrayCollection();
+			private var competencias2Array:ArrayCollection = new ArrayCollection();
+		
+			private var begin:int;
+			private var num:int;
+		
+			public function setNumCompetencias(begin:int, num:int):void
+			{
+				if(begin > 0 && num > 0 && begin <= num)
+				{
+					this.begin = begin;
+					this.num = num;
+				
+					for(var i:int = begin; i < num; i++)
+					{
+						// Creamos el checkbox
+						var cb:CheckBox = new CheckBox();
+						cb.label = begin.toString();
+						// Lo añadimos al array 1
+						competencias1Array.addItem(cb);
+						// Lo añadimos al panel 1
+						competencias1.addChild(cb);
+						// Añadimos el listener
+						cb.addEventListener(MouseEvent.CLICK, comprobarSeleccion);
+						// Lo marcamos
+						cb.selected = true;
+						
+						// Creamos el checkbox inferior
+						cb = new CheckBox();
+						cb.label = (i + 1).toString();
+						// Lo añadimos al array 2
+						competencias2Array.addItem(cb);
+						// Lo añadimos al panel 2
+						competencias2.addChild(cb);
+						// Añadimos el listener
+						cb.addEventListener(MouseEvent.CLICK, comprobarSeleccion);
+					}
+				}
+			}
+			
+			public function actualizar(nuevoNum:int)
+			{
+				if(nuevoNum > 0 && nuevoNum >= begin)
+				{
+					// Si aumenta el número de criterios
+					if(nuevoNum > this.num)
+					{
+						for(var i:int = num; i < nuevoNum; i++)
+						{
+							// Creamos el checkbox
+							var cb:CheckBox = new CheckBox();
+							cb.label = begin.toString();
+							// Lo añadimos al array 1
+							competencias1Array.addItem(cb);
+							// Lo añadimos al panel 1
+							competencias1.addChild(cb);
+							// Añadimos el listener
+							cb.addEventListener(MouseEvent.CLICK, comprobarSeleccion);
+							// Lo marcamos
+							cb.selected = true;
+							
+							// Creamos el checkbox inferior
+							cb = new CheckBox();
+							cb.label = (i + 1).toString();
+							// Lo añadimos al array 2
+							competencias2Array.addItem(cb);
+							// Lo añadimos al panel 2
+							competencias2.addChild(cb);
+							// Añadimos el listener
+							cb.addEventListener(MouseEvent.CLICK, comprobarSeleccion);
+						}
+						this.num = nuevoNum;	
+					}
+					// Si disminuye el número de criterios
+					else if(nuevoNum < this.num)
+					{
+						for(var i:int = num-begin-1; i >= nuevoNum-begin; i--)
+						{
+							var cb:CheckBox = competencias1Array.getItemAt(i) as CheckBox;
+							// Lo eliminamos del array 1
+							competencias1Array.removeItemAt(i);
+							// Lo eliminamos del panel
+							competencias1.removeChild(cb);
+								
+							cb = competencias2Array.getItemAt(i) as CheckBox;
+							// Lo eliminamos del array 1
+							competencias2Array.removeItemAt(i);
+							// Lo eliminamos del panel
+							competencias2.removeChild(cb);
+						}	
+						this.num = nuevoNum;
+					}
+				}
+			}
+			
+			/**
+			 * Devuelve los resultados del criterio para la competencia index (index >= 1)
+			 */
+			public function obtenerResultadosCompetencia(index:int):int
+			{
+				var numSelecciones:int = 0;
+				if(index == begin)
+				{
+					for(var i:int = 0; i < competencias1Array.length; i++)
+					{
+						var cb:CheckBox = competencias1Array.getItemAt(i) as CheckBox;
+						if(cb.selected)
+						{
+							numSelecciones++;
+						}
+					}
+				}
+				else if(index > begin && index <= num)
+				{
+					var i:int = index - (begin+1);
+					if(i < competencias2Array.length)
+					{
+						var cb:CheckBox = competencias2Array.getItemAt(i) as CheckBox;
+						if(cb.selected)
+						{
+							numSelecciones++;
+						}
+					}
+				}
+				return numSelecciones;	
+			}
+			
+			private function comprobarSeleccion(event:MouseEvent):void
+			{
+				// Si hemos desmarcado el checkBox, hay que marcar el de arriba
+				var cb:CheckBox = event.currentTarget as CheckBox;
+				if(competencias1Array.contains(cb))
+				{
+					var index:int = competencias1Array.getItemIndex(cb);
+					var cb2:CheckBox = competencias2Array.getItemAt(index) as CheckBox;
+					cb2.selected = !cb.selected;
+				}
+				else if(competencias2Array.contains(cb))
+				{
+					var index:int = competencias2Array.getItemIndex(cb);
+					var cb2:CheckBox = competencias1Array.getItemAt(index) as CheckBox;
+					cb2.selected = !cb.selected;
+				}
+			}
+			
+			private function cambiarTamanyo(event:Event=null):void
+			{
+				var longitud:Number = competencias2.width;
+				if(longitud > this.minWidth)
+				{
+					//this.minWidth = longitud;
+					this.width = longitud;
+					var event:Event = new Event(Event.RESIZE);
+					(this.parent.parent.parent as Matriz).actualizarTamanyos(event);
+				}
+			}
+			
+			public function getAnchura():Number
+			{
+				return this.competencias2.width;
+			}
+			
+			/**
+			 * Función que establece las competencias marcadas para el criterio
+			 */
+			public function setInstancias(instancias:ArrayCollection):void
+			{
+				for(var i:int = 0; i < instancias.length; i++)
+				{
+					var seleccion:int = parseInt(instancias.getItemAt(i).toString());
+					if(seleccion >= begin)
+					{
+						if(seleccion == begin)
+						{
+							(competencias1Array.getItemAt(i) as CheckBox).selected = true;
+							(competencias2Array.getItemAt(i) as CheckBox).selected = false;
+						}
+						else if(seleccion > begin && seleccion <= num)
+						{
+							if(parseInt((competencias2Array.getItemAt(i) as CheckBox).label) == seleccion)
+							{
+								(competencias2Array.getItemAt(i) as CheckBox).selected = true;
+								(competencias1Array.getItemAt(i) as CheckBox).selected = false;
+							}
+						}
+					}
+				}
+			}
+			
+			public function toXML(nivel:int):String
+			{
+				var texto:String = "";
+				texto += Common.tabs(nivel) + "<CriterionCompetence>\n";
+				for(var i:int = 0; i < competencias1Array.length; i++)
+				{
+					if((competencias1Array.getItemAt(i) as CheckBox).selected)
+					{
+						texto += Common.tabs(nivel+1) + "<competence>" + (competencias1Array.getItemAt(i) as CheckBox).label + "</competence>\n";
+					}
+					else
+					{
+						texto += Common.tabs(nivel+1) + "<competence>" + (competencias2Array.getItemAt(i) as CheckBox).label + "</competence>\n";
+					}
+				}
+				texto += Common.tabs(nivel) + "</CriterionCompetence>\n";
+				return texto;
+			}
+			
+			public function ajustarTamanyo():void
+			{
+				this.cambiarTamanyo();
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

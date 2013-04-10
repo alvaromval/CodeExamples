@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" borderStyle="none" borderColor="#0C6D05" fontSize="10" color="#0C4A15" creationCompleteEffect="{fadeOn}" removedEffect="{fadeOff}">
+	<mx:Fade id="fadeOn" 
+    	alphaFrom="0.0"
+    	alphaTo="1.0"
+    />
+    <mx:Fade id="fadeOff" 
+    	alphaFrom="1.0"
+    	alphaTo="0.0"
+    />
+	<mx:Script>
+		<![CDATA[
+			import componentes.VentanaDescripcion;
+			import diferencialSemantico.DiferencialSemantico;
+			import mx.collections.ArrayCollection;
+			import mx.core.Application;
+			import mx.managers.PopUpManager;
+			import mx.effects.Zoom;
+			import utilidades.Constants;
+			import mixta.HerramientaMixta;
+			import matrizDecision.MatrizDecision;
+			import listaControlEscalaValoracion.ListaControlEscalaValoracion;
+			import listaControl.ListaControl;
+			import escalaValoracion.EscalaValoracion;
+			import rubrica.Rubrica;
+			import mx.controls.Alert;
+			
+			private var zoom:Number = 1;
+			private var porcentaje:Number = -1;
+			private var descripcion:String = null;
+			
+			/**
+			 * Establece el porcentaje del instrumento
+			 * Se utiliza cuando el instrumento está contenido dentro de una herramienta mixta
+			 */
+			public function setPorcentaje(porcentaje:int):void
+			{
+				this.porcentaje = porcentaje;
+			}
+			
+			/**
+			 * Devuelve el porcentaje del instrumento
+			 * Se utiliza cuando el instrumento está contenido dentro de una herramienta mixta
+			 */
+			public function getPorcentaje():Number
+			{
+				return this.porcentaje;	
+			}
+			
+			/**
+			 * Devuelve el porcentaje del instrumento especificado en la casilla de texto correspondiente al porcentaje del instrumento
+			 * El instrumento debe tener una casilla donde el usuario puede especificar el porcentaje a introducir
+			 * Este método se debe sobreescribir en el instrumento específico
+			 */
+			public function getPorcentajeText():int
+			{
+				return this.porcentaje;
+			}
+			
+			/**
+			 * Establece el valor de la casilla de texto correspondiente al porcentaje del instrumento
+			 * El instrumento debe tener una casilla donde el usuario puede especificar el porcentaje a introducir
+			 * Este método se debe sobreescribir en el instrumento específico
+			 */
+			public function setPorcentajeText(porcentaje:String):void
+			{	
+			}
+			
+			/**
+			 * Establece el porcentaje pasado como parámetro en el instrumento y actualiza el resto de los instrumento de acuerdo al 
+			 * nuevo porcentaje insertado
+			 * El evento "event" indica si el porcentaje es introducido por el usuario, en ese caso se obtiene el valor del porcentaje de la casilla
+			 * de texto correspondiente al porcentaje (ver métodos setPorcentajeText y getPorcentajeText)
+			 * En caso de que el evento sea nulo (por defecto) el porcentaje se establecerá al valor pasado en "porcent"
+			 */
+			public function insertarPorcentaje(porcent:int, event:MouseEvent=null):void
+			{
+				if(event != null)
+				{
+					if(this.getPorcentajeText() > 100 || this.getPorcentajeText() < 0)
+					{
+						this.setPorcentajeText(this.getPorcentaje().toString());
+						return;
+					}
+					else
+					{
+						porcent = getPorcentajeText();
+					}
+				}
+				else
+				{
+					this.setPorcentajeText(porcent.toString());
+				}
+				if(this.getPorcentaje() == 100 && porcent != 100)
+				{
+					// No se puede modificar porque el resto de las dimensiones tienen valor 0
+					Alert.show(resourceManager.getString("myBundle", "warning_percentage"), resourceManager.getString("myBundle", "warning"));
+					this.setPorcentaje(100);
+				}
+				else
+				{
+				 	// Medimos el porcentaje asignado en el caso de que haya uno introducido
+					if(porcent <= 100 && porcent >= 0)
+					{
+						// Si solo tenemos una subdimensión, ponemos directamente 100
+						if(this.getHerramientaMixta().getNumInstrumentos() == 1)
+						{
+							this.setPorcentaje(100);
+						}
+						else
+						{
+							// Comprobamos si el nuevo porcentaje es distinto al anterior
+							// Asignamos el nuevo porcentaje
+							this.porcentaje = porcent;
+							// El porcentaje a asignar al resto de dimensiones es el resto del porcentaje
+							var restoPorcentaje:int = 100 - this.porcentaje;
+							// El porcentaje a asignar en el caso de que la actualización sea múltiple
+							var porcentajeMultiple:int = 0;
+							var restoPorcentajeMultiple:int = 0;
+							var porcentajeResidual:int = 0; // Porcentaje del resto de dimensiones menos la/s modificada/s
+							// Obtenemos las dimensiones restantes y las actualizamos
+							var elementos:ArrayCollection = this.getHerramientaMixta().getInstrumentosEvaluables();
+							var porcentajes:ArrayCollection = new ArrayCollection(); // Array con los nuevos porcentajes
+							var porcentajesMultiple:ArrayCollection = new ArrayCollection();
+							
+							var restoElementosMultiple:ArrayCollection = new ArrayCollection(); // Array con las dimensiones y valoración global sin porcentaje introducido
+							var restoElementos:ArrayCollection = new ArrayCollection(); // Array con el resto de dimensiones y la valoración global
+							for(var i:int = 0; i < elementos.length; i++)
+							{
+								var elemento:InstrumentoEvaluacion = elementos.getItemAt(i) as InstrumentoEvaluacion;
+								if(elemento != this)
+								{
+									// Si he introducido un porcentaje y no lo he actualizado, tiene preferencia el valor introducido
+									// Esto es útil para actualización múltiple
+									if(elemento.getPorcentajeText() >= 0 && elemento.getPorcentajeText() <= 100)
+									{
+										if(elemento.getPorcentaje() != elemento.getPorcentajeText())
+										{
+											porcentajeMultiple += elemento.getPorcentajeText();
+											restoElementosMultiple.addItem(elemento);
+											porcentajesMultiple.addItem(elemento.getPorcentajeText());
+										}
+									}
+								}
+							}
+							// Añadimos el porcentaje actual
+							porcentajeMultiple += porcent;
+							if(restoElementosMultiple.length >= 1)
+							{
+								restoElementosMultiple.addItem(this);
+								porcentajesMultiple.addItem(porcent);
+							}
+							
+							if(restoElementosMultiple.length == elementos.length)
+							{
+								if(porcentajeMultiple < 98 || porcentajeMultiple > 100)
+								{
+									Alert.show(resourceManager.getString("myBundle", "error_percentage"), resourceManager.getString("myBundle", "error"));
+									for(var i:int = 0; i < elementos.length; i++)
+									{
+										var elemento:InstrumentoEvaluacion = elementos.getItemAt(i) as InstrumentoEvaluacion;
+										if(elemento != this)
+										{
+											// Si todavía no tenía porcentaje asignado
+											if(elemento.porcentaje == -1)
+											{
+												//dimension.setPorcentaje(restoPorcentaje/(dimensiones.length-1));
+												porcentajes.addItem((int)(restoPorcentaje/(elementos.length-1)));
+												restoElementos.addItem(elemento);
+											}
+											// Si tenía porcentaje asignado, actualizamos manteniendo la proporción
+											else
+											{
+												// Obtengo el resto de porcentajes
+												porcentajeResidual = 0;
+												for(var j:int = 0; j < elementos.length; j++)
+												{
+													var elemento2:InstrumentoEvaluacion = elementos.getItemAt(j) as InstrumentoEvaluacion;
+													if(elemento2 != elemento && elemento2 != this)
+													{
+														porcentajeResidual += elemento2.getPorcentaje();
+													}
+												}
+												var aux:Number = (elemento.getPorcentaje() / porcentajeResidual);
+												var nuevoPorcentaje:int = restoPorcentaje / (1 + 1/aux);
+												porcentajes.addItem(nuevoPorcentaje);
+												restoElementos.addItem(elemento);
+											}
+										}
+									}
+								}
+								else
+								{
+									for(var i:int = 0; i < elementos.length; i++)
+									{
+										var elemento:InstrumentoEvaluacion = elementos.getItemAt(i) as InstrumentoEvaluacion;
+										elemento.setPorcentaje(elemento.getPorcentajeText());
+									}
+								}
+							}
+							else
+							{
+								// Si el porcentaje múltiple es válido, es decir es menor o igual que 100
+								if(porcentajeMultiple <= 100 && porcentajeMultiple > 0 && restoElementosMultiple.length >= 1)
+								{	
+									restoPorcentajeMultiple = 100 - porcentajeMultiple;
+									// Establecemos los porcentajes introducidos
+									for(var i:int = 0; i < restoElementosMultiple.length; i++)
+									{
+										var elemento:InstrumentoEvaluacion = restoElementosMultiple.getItemAt(i) as InstrumentoEvaluacion;
+										(restoElementosMultiple.getItemAt(i) as InstrumentoEvaluacion).setPorcentaje(porcentajesMultiple.getItemAt(i) as int);
+									}
+									for(var i:int = 0; i < elementos.length; i++)
+									{
+										var elemento:InstrumentoEvaluacion = elementos.getItemAt(i) as InstrumentoEvaluacion;
+										if(!restoElementosMultiple.contains(elemento))
+										{
+											// Si todavía no tenía porcentaje asignado
+											if(elemento.porcentaje == -1)
+											{
+												porcentajes.addItem((int)(restoPorcentajeMultiple/(elementos.length - restoElementosMultiple.length)));
+												restoElementos.addItem(elemento);
+											}
+											// Si tenía porcentaje asignado, actualizamos manteniendo la proporción
+											else
+											{
+												// Obtengo el resto de porcentajes
+												porcentajeResidual = 0;
+												for(var j:int = 0; j < elementos.length; j++)
+												{
+													var elemento2:InstrumentoEvaluacion = elementos.getItemAt(j) as InstrumentoEvaluacion;
+													if(elemento2 != elemento && !restoElementosMultiple.contains(elemento2))
+													{
+														porcentajeResidual += elemento2.getPorcentaje();
+													}
+												}
+												if(porcentajeResidual == 0)
+												{
+													var nuevoPorcentaje:int = restoPorcentajeMultiple;
+													porcentajes.addItem(nuevoPorcentaje);
+													restoElementos.addItem(elemento);
+												}
+												else
+												{
+													var aux:Number = (elemento.getPorcentaje() / porcentajeResidual);
+													var nuevoPorcentaje:int = restoPorcentajeMultiple / (1 + 1/aux);
+													porcentajes.addItem(nuevoPorcentaje);
+													restoElementos.addItem(elemento);
+												}
+											}
+										}
+									}		
+								}
+								// Si es mayor, se actualiza en función del valor introducido en la dimensión actual
+								else
+								{
+									for(var i:int = 0; i < elementos.length; i++)
+									{
+										var elemento:InstrumentoEvaluacion = elementos.getItemAt(i) as InstrumentoEvaluacion;
+										if(elemento != this)
+										{
+											// Si todavía no tenía porcentaje asignado
+											if(elemento.porcentaje == -1)
+											{
+												//dimension.setPorcentaje(restoPorcentaje/(dimensiones.length-1));
+												porcentajes.addItem((int)(restoPorcentaje/(elementos.length-1)));
+												restoElementos.addItem(elemento);
+											}
+											// Si tenía porcentaje asignado, actualizamos manteniendo la proporción
+											else
+											{
+												// Obtengo el resto de porcentajes
+												porcentajeResidual = 0;
+												for(var j:int = 0; j < elementos.length; j++)
+												{
+													var elemento2:InstrumentoEvaluacion = elementos.getItemAt(j) as InstrumentoEvaluacion;
+													if(elemento2 != elemento && elemento2 != this)
+													{
+														porcentajeResidual += elemento2.getPorcentaje();
+													}
+												}
+												var aux:Number = (elemento.getPorcentaje() / porcentajeResidual);
+												var nuevoPorcentaje:int = restoPorcentaje / (1 + 1/aux);
+												porcentajes.addItem(nuevoPorcentaje);
+												restoElementos.addItem(elemento);
+											}
+										}
+									}
+								}
+							}
+							// Una vez obtenidos los nuevos porcentajes, actualizamos
+							for(var i:int = 0; i < restoElementos.length; i++)
+							{
+								(restoElementos.getItemAt(i) as InstrumentoEvaluacion).setPorcentaje(porcentajes.getItemAt(i) as int);
+							}
+						}
+					}
+				}
+				actualizarNota();	
+			}
+			
+			/**
+			 * Devuelve el valor en XML del instrumento
+			 * Este método debe sobreescribirse en el instrumento específico
+			 * El parámetro "child" indica si el instrumento se encuentra dentro de una herramienta mixta o no
+			 */
+			public function toXML(child:Boolean=false):String
+			{
+				return "";
+			}
+			
+			/**
+			 * Devuelve el padre (contenedor) del instrumento actual
+			 */
+			public function getPadre():DisplayObjectContainer
+			{
+				return this.parent;
+			}
+			
+			/**
+			 * Devuelve la herramienta mixta en la que está contenido el instrumento actual en el caso de que lo esté
+			 * En caso contrario devuelve null
+			 */
+			public function getHerramientaMixta():HerramientaMixta
+			{
+				var padre:DisplayObjectContainer = getPadre();
+				while(padre != null)
+				{
+					if(padre is HerramientaMixta)
+					{
+						return padre as HerramientaMixta;
+					}
+					else
+					{
+						padre = padre.parent;
+					}
+				}
+				return null;
+			}
+			
+			/**
+			 * Establece el nombre del instrumento, a implementar en el instrumento específico
+			 */
+			public function setName(nombre:String):void
+			{
+			}
+			
+			/**
+			 * Devuelve el nombre del instrumento, a implementar en el instrumento específico
+			 */
+			public function getName():String
+			{
+				return "";
+			}
+			
+			/**
+			 * Devuelve la descripción del instrumento
+			 */
+			public function getDescripcion():String
+			{
+				return this.descripcion;
+			}
+			
+			/**
+			 * Establece la descripción del instrumento
+			 */
+			public function setDescripcion(descripcion:String):void
+			{
+				this.descripcion = descripcion;
+			}
+			
+			/**
+			 * Muestra la descripción del instrumento en una ventana emergente
+			 */
+			public function verDescripcion():void
+			{
+				var vd:VentanaDescripcion = VentanaDescripcion(PopUpManager.createPopUp(this, VentanaDescripcion, false));
+				vd.init(this.getEditable(), this.getDescripcion());
+				PopUpManager.centerPopUp(vd);
+				vd.addEventListener(Event.REMOVED, manejadorVerDescripcion);
+			}
+			
+			private function manejadorVerDescripcion(event:Event):void
+			{
+				var vd:VentanaDescripcion = event.currentTarget as VentanaDescripcion;
+				this.setDescripcion(vd.getDescripcion());
+			}
+			
+			/**
+			 * Devuelve la nota obtenida en el instrumento, a implementar en el instrumento específico
+			 */
+			public function getNota():int
+			{
+				return 0;
+			}
+			
+			/**
+			 * Actualiza la nota del instrumento específico en función del cambio en alguno de sus elementos
+			 * A implementar en el instrumento específico
+			 */
+			public function actualizarNota(event:Event=null):void
+			{
+			}
+			
+			/**
+			 * Actualiza la nota de la herramienta mixta que contiene al instrumento, si es el caso
+			 */
+			public function actualizarNotaPadre(event:Event=null):void
+			{
+				/*
+				var padre:DisplayObjectContainer = this.parent;
+				while(padre)
+				{
+					if(padre is HerramientaMixta)
+					{
+						(padre as HerramientaMixta).actualizarNota();
+						return;
+					}
+					else
+					{
+						padre = padre.parent;
+					}
+				}*/
+				var hm:HerramientaMixta = this.getHerramientaMixta();
+				if(hm) hm.actualizarNota();
+			}
+			
+			/**
+			 * Establece la vista de evaluación en el instrumento destino, se deshabilitan los controles de edición o se hacen
+			 * invisibles
+			 * A implementar en el instrumento específico
+			 */
+			public function setVistaEvaluacion():void
+			{
+			}
+			
+			/**
+			 * Devuelve un booleano indicando si el instrumento es editable o no
+			 */
+			public function getEditable():Boolean
+			{
+				var dioc:DisplayObjectContainer = this.parent;
+				while((dioc != null) && !(dioc is VentanaGenerica))
+				{
+					dioc = dioc.parent;
+				}
+				if(dioc != null)
+				{
+					return !(dioc is VentanaEvaluacion || dioc is VentanaConsulta);
+				}
+				return true;
+			}
+			
+			/**
+			 * Devuelve el tipo del instrumento (debe tener correspondencia al valor en el servidor)
+			 */
+			public function getTipo():String
+			{
+				for(var i:int = 0; i < Constants.instrumentos.length; i++)
+				{
+					var miClase:Class = Class(getDefinitionByName(Constants.instrumentos[i][0]));
+					if(this is miClase)
+					{
+						return Constants.instrumentos[i][1];
+					}	
+				}
+				return "undefined";
+				/*
+				if(this is Rubrica)
+				{
+					return Constants.RUBRICA;
+				}
+				else if(this is EscalaValoracion)
+				{
+					return Constants.ESCALA_VALORACION;
+				}
+				else if(this is ListaControl)
+				{
+					return Constants.LISTA_CONTROL;
+				}
+				else if(this is ListaControlEscalaValoracion)
+				{
+					return Constants.LISTA_CONTROL_ESCALA_VALORACION;
+				}
+				else if(this is DiferencialSemantico)
+				{
+					return Constants.SEMANTIC_DIFFERENTIAL;
+				}
+				else if(this is MatrizDecision)
+				{
+					return Constants.MATRIZ_DECISION;
+				}
+				else if(this is HerramientaMixta)
+				{
+					return Constants.MIXTA;
+				}
+				else
+				{
+					return "undefined";
+				}
+				*/
+			}
+			
+			/**
+			 * Ajusta la altura de los campos de texto del instrumento de evaluación 
+			*/
+			public function ajustarTamanyo(evaluacion:Boolean=false):void
+			{
+				
+			}
+			
+			/**
+			 * Aumenta el zoom del instrumento en un 10%
+			 */
+			public function aumentarZoom():void
+			{
+				var effectZoom:Zoom = new Zoom();	
+				effectZoom.zoomHeightFrom = zoom;
+				effectZoom.zoomHeightTo = zoom*1.1;
+				effectZoom.zoomWidthFrom = zoom;
+				effectZoom.zoomWidthTo = zoom*1.1;
+				effectZoom.originX = 0;
+				effectZoom.originY = 0;
+				effectZoom.play([this]);
+				zoom = zoom*1.1;	
+			}
+			
+			/**
+			 * Disminuye el zoom del instrumento en un 10%
+			 */
+			public function disminuirZoom():void
+			{
+				var effectZoom:Zoom = new Zoom();	
+				effectZoom.zoomHeightFrom = zoom;
+				effectZoom.zoomHeightTo = zoom/1.1;
+				effectZoom.zoomWidthFrom = zoom;
+				effectZoom.zoomWidthTo = zoom/1.1;
+				effectZoom.originX = 0;
+				effectZoom.originY = 0;
+				effectZoom.play([this]);
+				zoom = zoom/1.1;	
+			}
+			
+			/**
+			 * Elimina el instrumento de una herramienta mixta (si es el caso)
+			 */
+			public function borrar():void
+			{
+				var hm:HerramientaMixta = this.getHerramientaMixta();
+				if(hm)
+				{
+					hm.eliminarInstrumento(this);	
+				}
+			}
+			
+			/**
+			 * Añade el instrumento a una herramienta mixta (si es el caso)
+			 */
+			public function anyadir():void
+			{
+				var hm:HerramientaMixta = this.getHerramientaMixta();
+				if(hm)
+				{
+					hm.anyadirInstrumento(hm.getIndexInstrumento(this) + 1);
+				}
+			}
+			
+			/**
+			 * Añade los controles necesarios para la gestión de un instrumento dentro de una herramienta mixta (si es el caso)
+			 * Principalmente añade:
+			 * - Casilla de porcentaje
+			 * - Botón de eliminar instrumento
+			 * - Botón de añadir nuevo instrumento
+			 */
+			public function setVistaHerramientaMixta():void
+			{
+			}
+			
+			/**
+			 * Oculta los controles de la gestión de un instrumento dentro de una herramienta mixta (si es el caso)
+			 */
+			public function ocultarVistaHerramientaMixta():void
+			{
+			}
+			
+			/**
+			 * Rellena el array pasado como parámetro con las advertencias producidas durante la edición 
+			 * del instrumento en forma de Strings.
+			 */
+			public function getAdvertencias(advertencias:ArrayCollection):void
+			{	
+			}
+			
+			/**
+			 * Rellena el array pasado como parámetro con los errores producidos durante la edición 
+			 * del instrumento en forma de Strings.
+			 */
+			public function getErrores(errores:ArrayCollection):void
+			{	
+			}
+			
+			public function revisar(infoRevision:ArrayCollection):void
+			{
+			}
+			
+			public function setVistaRevision(notaRevisor:String):void
+			{
+			}
+			
+			/**
+			 * Indica si una herramienta es o no mixta a través de su descripción XML
+			 */
+			/*public static function esMixta(description:String):Boolean
+			{
+				try
+				{
+					var xml:XMLDocument = new XMLDocument();
+					xml.parseXML(description);
+					xml.ignoreWhite = false;
+					var xmlNode:XMLNode = xml.firstChild;
+					var tipoInstrumento:String = xmlNode.nodeName;
+					if(xmlNode.nodeName == "MixTool" || xmlNode.nodeName.search(/\w*:Rubric/) != -1)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+		      	catch(error:Error)
+		    	{
+		    		Alert.show("ERROR:\nError while parsing the file:\n" + error.getStackTrace(), "ERROR, incompatible file");
+				}
+				return false;
+			}*/
+		]]>
+	</mx:Script>
+</mx:Canvas>

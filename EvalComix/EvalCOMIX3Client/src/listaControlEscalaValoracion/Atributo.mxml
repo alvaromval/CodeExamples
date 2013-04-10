@@ -1,0 +1,719 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="top" borderStyle="solid" horizontalGap="2" borderSides="bottom,right" alpha="1.0" borderColor="#FFFFFF" backgroundAlpha="0.0"  borderThickness="2" minHeight="45" xmlns:componentes="componentes.*">
+	<mx:VBox width="13" height="100%" verticalGap="2">
+		<mx:Button id="buttonBorrar" click="borrar()" width="12" cornerRadius="0" icon="@Embed(source='../img/iconClose2.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12"/>
+		<mx:VBox width="100%" height="100%">
+		</mx:VBox>
+		<mx:Button id="buttonAnyadir" click="insertarAtributo()" width="12" cornerRadius="0" icon="@Embed(source='../img/iconAnyadir.gif')" fillAlphas="[0.0, 0.0, 0.0, 0.0]" height="12"/>
+	</mx:VBox>
+	<mx:TextInput id="porcentajeText" width="33" maxChars="3" backgroundColor="#000000" color="#00F00F" fontFamily="Verdana" textAlign="right" fontWeight="bold" restrict="/0-9/"/>
+	<mx:VBox height="100%" verticalGap="2" width="18" verticalAlign="top">
+		<mx:Button id="buttonPorcentaje" width="18" icon="@Embed(source='../img/iconPrctg.gif')" cornerRadius="0" click="insertarPorcentaje(1, event);" toolTip="@Resource(bundle='myBundle', key='insert_percentage')"/>
+		<componentes:ButtonComentario id="buttonComentarios" visible="false"/>
+	</mx:VBox>
+	<mx:TextArea width="220" id="nombre" backgroundColor="#FFFFFF" change="redimensionar()"/>
+	<mx:VBox width="100%" height="100%" verticalGap="0" borderSides="right" borderStyle="solid">
+		<mx:HBox minWidth="202" id="valoresListaControlBox" horizontalGap="0">
+		</mx:HBox>
+		<mx:Canvas width="100%" id="comentariosBoxListaControl">
+		</mx:Canvas>
+	</mx:VBox>	
+	<mx:VBox width="100%" height="100%" verticalGap="0">
+		<mx:HBox height="100%" horizontalGap="0" id="valoresBox">
+		</mx:HBox>
+		<mx:Canvas width="100%" id="comentariosBox">
+		</mx:Canvas>
+	</mx:VBox>
+	<mx:RadioButtonGroup id="valor"/>
+	<mx:RadioButtonGroup id="valorListaControl"/>
+	<mx:initialize>
+		<![CDATA[
+			this.valor.addEventListener(Event.CHANGE, actualizarNota);
+			this.valorListaControl.addEventListener(Event.CHANGE, actualizarNota);
+		]]>
+	</mx:initialize>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.collections.ArrayCollection;
+			import utilidades.Common;
+			import mx.controls.RadioButton;
+			use namespace mx_internal;
+			
+			private var numValores:int = 0; // Número de valores que puede tomar el atributo
+			private var subDimension:Subdimension = null;
+			private var habilitadosValores:Boolean = true;
+			private var porcentaje:Number = -1;
+			
+			public function setName(nombre:String):void
+			{
+				this.nombre.text = nombre;
+			}
+			
+			public function getName():String
+			{
+				return this.nombre.text;
+			}
+			
+			/**
+			 * Función que inserta un número determinado de valores en un atributo
+			 */
+			public function insertar(valores:int, valoresListaControl:Array, valoresEscala:Array):void
+			{
+				if(valoresListaControlBox.getChildren().length == 0)
+				{
+					// Lo primero que hacemos es insertar las casillas para la lista de control
+					for(var i:int = 0; i < 2; i++)
+					{
+						var rb:RadioButton = new RadioButton();
+						rb.minWidth = 100;
+						this.valoresListaControlBox.addChild(rb);
+						rb.width = (valoresListaControl[i] as TextInput).width;
+						rb.value = i;
+						rb.groupName = "valorListaControl";
+						if(i == 0)
+						{
+							rb.selected = true;
+							deshabilitarValores();
+							rb.addEventListener(MouseEvent.CLICK, deshabilitarValores);
+						}
+						else if(i == 1)
+						{
+							rb.addEventListener(MouseEvent.CLICK, habilitarValores);
+						}
+					}	
+				}
+				
+				this.numValores = valores;
+				for(var i:int = 0; i < valores; i++)
+				{
+					var rb:RadioButton = new RadioButton();
+					this.valoresBox.addChild(rb);
+					//rb.percentWidth = 100;
+					rb.minWidth = 100;
+					rb.width = (valoresEscala[i] as TextInput).width;
+					rb.value = i;
+					rb.groupName = "valor";
+					// Por defecto seleccionamos el primero
+					if(i == 0)
+					{
+						rb.selected = true;
+					}
+				}	
+			}
+			
+			public function getPorcentajeText():int
+			{
+				return parseInt(porcentajeText.text);
+			}
+			
+			/**
+			 * Establece un porcentaje en la dimensión, respetando los porcentajes del resto de dimensiones
+			 */
+			public function insertarPorcentaje(porcent:int, event:MouseEvent=null):void
+		 	{
+		 		if(event != null)
+			 	{
+			 		if(this.getPorcentajeText() > 100 || this.getPorcentajeText() < 0)
+			 		{
+			 			this.porcentajeText.text = this.getPorcentaje().toString();
+			 			return;
+			 		}
+			 		else
+			 		{
+			 			porcent = getPorcentajeText();
+			 		}
+			 	}
+			 	else
+			 	{
+			 		this.porcentajeText.text = porcent.toString();
+			 	}
+			 	if(this.getPorcentaje() == 100 && porcent != 100)
+			 	{
+			 		// No se puede modificar porque el resto de las dimensiones tienen valor 0
+			 		Alert.show(resourceManager.getString("myBundle", "warning_percentage"), resourceManager.getString("myBundle", "warning"));
+			 		this.setPorcentaje(100);
+			 	}
+			 	else
+			 	{
+				 	// Medimos el porcentaje asignado en el caso de que haya uno introducido
+					if(porcent <= 100 && porcent >= 0)
+					{
+						// Si solo tenemos una subdimensión, ponemos directamente 100
+						if(this.subDimension.getAtributos().length == 1)
+						{
+							this.setPorcentaje(100);
+						}
+						else
+						{
+							// Comprobamos si el nuevo porcentaje es distinto al anterior
+							// Asignamos el nuevo porcentaje
+							this.porcentaje = porcent;
+							// El porcentaje a asignar al resto de atributos es el resto del porcentaje
+							var restoPorcentaje:int = 100 - this.porcentaje;
+							// El porcentaje a asignar en el caso de que la actualización sea múltiple
+							var porcentajeMultiple:int = 0;
+							var restoPorcentajeMultiple:int = 0;
+							// Obtenemos las atributos restantes y las actualizamos
+							var atributos:ArrayCollection = this.subDimension.getAtributos();
+							var porcentajes:ArrayCollection = new ArrayCollection(); // Array con los nuevos porcentajes
+							var porcentajesMultiple:ArrayCollection = new ArrayCollection();
+							
+							var restoAtributosMultiple:ArrayCollection = new ArrayCollection(); // Array con las atributos sin porcentaje introducido
+							var restoAtributos:ArrayCollection = new ArrayCollection(); // Array con el resto de atributos
+							for(var i:int = 0; i < atributos.length; i++)
+							{
+								var atributo:Atributo = atributos.getItemAt(i) as Atributo;
+								if(atributo != this)
+								{
+									// Si he introducido un porcentaje y no lo he actualizado, tiene preferencia el valor introducido
+									// Esto es útil para actualización múltiple
+									if(parseInt(atributo.porcentajeText.text) >= 0 && parseInt(atributo.porcentajeText.text) <= 100)
+									{
+										if(atributo.getPorcentaje() != parseInt(atributo.porcentajeText.text))
+										{
+											porcentajeMultiple += parseInt(atributo.porcentajeText.text);
+											restoAtributosMultiple.addItem(atributo);
+											porcentajesMultiple.addItem(parseInt(atributo.porcentajeText.text));
+										}
+									}
+								}
+							}
+							// Añadimos el porcentaje actual
+							porcentajeMultiple += porcent;
+							if(restoAtributosMultiple.length >= 1)
+							{
+								restoAtributosMultiple.addItem(this);
+								porcentajesMultiple.addItem(porcent);
+							}
+							
+							if(restoAtributosMultiple.length == atributos.length)
+							{
+								if(porcentajeMultiple < 98 || porcentajeMultiple > 100)
+								{
+									Alert.show(resourceManager.getString("myBundle", "error_percentage"), resourceManager.getString("myBundle", "error"));
+									for(var i:int = 0; i < atributos.length; i++)
+									{
+										var atributo:Atributo = atributos.getItemAt(i) as Atributo;
+										if(atributo != this)
+										{
+											// Si todavía no tenía porcentaje asignado
+											if(atributo.porcentaje == -1)
+											{
+												//atributo.setPorcentaje(restoPorcentaje/(atributos.length-1));
+												porcentajes.addItem((int)(restoPorcentaje/(atributos.length-1)));
+												restoAtributos.addItem(atributo);
+											}
+											// Si tenía porcentaje asignado, actualizamos manteniendo la proporción
+											else
+											{
+												// Obtengo el resto de porcentajes
+												var porcentajeResidual:int = 0; // Porcentaje relativo al resto de atributos menos la actual
+												for(var j:int = 0; j < atributos.length; j++)
+												{
+													var atr2:Atributo = atributos.getItemAt(j) as Atributo;
+													if(atr2 != atributo && atr2 != this)
+													{
+														porcentajeResidual += atr2.getPorcentaje();
+													}
+												}
+												var aux:Number = (atributo.getPorcentaje() / porcentajeResidual);
+												var nuevoPorcentaje:int = restoPorcentaje / (1 + 1/aux);
+												porcentajes.addItem(nuevoPorcentaje);
+												restoAtributos.addItem(atributo);
+											}
+										}
+									}
+								}
+								else
+								{
+									for(var i:int = 0; i < atributos.length; i++)
+									{
+										var atributo:Atributo = atributos.getItemAt(i) as Atributo;
+										atributo.setPorcentaje(parseInt(atributo.porcentajeText.text));
+									}
+								}
+							}
+							else
+							{
+								// Si el porcentaje múltiple es válido, es decir es menor o igual que 100
+								if(porcentajeMultiple <= 100 && porcentajeMultiple > 0 && restoAtributosMultiple.length >= 1)
+								{	
+									restoPorcentajeMultiple = 100 - porcentajeMultiple;
+									
+									// Establecemos los porcentajes introducidos
+									for(var i:int = 0; i < restoAtributosMultiple.length; i++)
+									{
+										var atributo:Atributo = restoAtributosMultiple.getItemAt(i) as Atributo;
+										(restoAtributosMultiple.getItemAt(i) as Atributo).setPorcentaje(porcentajesMultiple.getItemAt(i) as int);
+									}
+									for(var i:int = 0; i < atributos.length; i++)
+									{
+										var atributo:Atributo = atributos.getItemAt(i) as Atributo;
+										if(!restoAtributosMultiple.contains(atributo))
+										{
+											// Si todavía no tenía porcentaje asignado
+											if(atributo.porcentaje == -1)
+											{
+												//atributo.setPorcentaje(restoPorcentaje/(atributos.length-1));
+												//Alert.show("Porcentaje: " + restoPorcentajeMultiple);
+												//Alert.show("atributos " + (atributos.length - restoAtributosMultiple.length));
+												porcentajes.addItem((int)(restoPorcentajeMultiple/(atributos.length - restoAtributosMultiple.length)));
+												restoAtributos.addItem(atributo);
+											}
+											// Si tenía porcentaje asignado, actualizamos manteniendo la proporción
+											else
+											{
+												// Obtengo el resto de porcentajes
+												var porcentajeResidual:int = 0; // Porcentaje relativo al resto de atributos menos la actual
+												for(var j:int = 0; j < atributos.length; j++)
+												{
+													var atr2:Atributo = atributos.getItemAt(j) as Atributo;
+													if(atr2 != atributo && !restoAtributosMultiple.contains(atr2))
+													{
+														porcentajeResidual += atr2.getPorcentaje();
+													}
+												}
+												if(porcentajeResidual == 0)
+												{
+													var nuevoPorcentaje:int = restoPorcentajeMultiple;
+													porcentajes.addItem(nuevoPorcentaje);
+													restoAtributos.addItem(atributo);
+												}
+												else
+												{
+													var aux:Number = (atributo.getPorcentaje() / porcentajeResidual);
+													var nuevoPorcentaje:int = restoPorcentajeMultiple / (1 + 1/aux);
+													porcentajes.addItem(nuevoPorcentaje);
+													restoAtributos.addItem(atributo);
+												}
+											}
+										}
+									}		
+								}
+								// Si es mayor, se actualiza en función del valor introducido en la dimensión actual
+								else
+								{
+									for(var i:int = 0; i < atributos.length; i++)
+									{
+										var atributo:Atributo = atributos.getItemAt(i) as Atributo;
+										if(atributo != this)
+										{
+											// Si todavía no tenía porcentaje asignado
+											if(atributo.porcentaje == -1)
+											{
+												//atributo.setPorcentaje(restoPorcentaje/(atributos.length-1));
+												porcentajes.addItem((int)(restoPorcentaje/(atributos.length-1)));
+												restoAtributos.addItem(atributo);
+											}
+											// Si tenía porcentaje asignado, actualizamos manteniendo la proporción
+											else
+											{
+												// Obtengo el resto de porcentajes
+												var porcentajeResidual:int = 0; // Porcentaje relativo al resto de atributos menos la actual
+												for(var j:int = 0; j < atributos.length; j++)
+												{
+													var atr2:Atributo = atributos.getItemAt(j) as Atributo;
+													if(atr2 != atributo && atr2 != this)
+													{
+														porcentajeResidual += atr2.getPorcentaje();
+													}
+												}
+												var aux:Number = (atributo.getPorcentaje() / porcentajeResidual);
+												var nuevoPorcentaje:int = restoPorcentaje / (1 + 1/aux);
+												porcentajes.addItem(nuevoPorcentaje);
+												restoAtributos.addItem(atributo);
+											}
+										}
+									}
+								}
+							}
+							
+							// Una vez obtenidos los nuevos porcentajes, actualizamos
+							for(var i:int = 0; i < restoAtributos.length; i++)
+							{
+								(restoAtributos.getItemAt(i) as Atributo).setPorcentaje(porcentajes.getItemAt(i) as int);
+							}
+						}
+					}
+				}
+				actualizarNota();	
+		 	}
+			
+			public function anyadirCasillaValor(index:int):void
+			{
+				var rb:RadioButton = new RadioButton();
+				this.valoresBox.addChild(rb);
+				//rb.percentWidth = 100;
+				rb.width = 100;
+				rb.value = index;
+				rb.groupName = "valor";
+			}
+			
+			public function eliminarCasillaValor(index:int):void
+			{
+				if(valoresBox.getChildAt(index) is RadioButton)
+				{
+					var rb:RadioButton = valoresBox.getChildAt(index) as RadioButton;
+					if(rb.selected)
+					{
+						(this.valoresBox.getChildAt(0) as RadioButton).selected = true;
+					}
+				}
+				this.valoresBox.removeChildAt(index);
+			}
+		
+			/**
+			 * Inserta un atributo a continuación del actual
+			 */
+			private function insertarAtributo():void
+			{
+				var atr:Atributo = new Atributo();
+				// Debemos comprobar que el nuevo nombre que insertamos no está repetido
+				var nombre:String = this.subDimension.renombrarAtributo(0);
+				var atributos:ArrayCollection = this.subDimension.getAtributos();
+				for(var i:int = 0; i < atributos.length; i++)
+				{
+					if(this == atributos.getItemAt(i))
+					{
+						this.subDimension.addAtributo(atr, i+1);
+						atr.nombre.text = nombre;
+						// Modificamos el número de atributos en la casilla correspondiente
+						this.subDimension.numAtr.text = (parseInt(this.subDimension.numAtr.text) + 1).toString();
+						// Establecemos el porcentaje a 0
+						if(atributos.getItemAt(0) != null)
+						{
+							if((atributos.getItemAt(0) as Atributo).getPorcentaje() != -1)
+							{
+								//atr.setPorcentaje(0);
+								atr.insertarPorcentaje((int)(100/(this.getSubDimension().getAtributos().length)));
+							}
+						}
+					}
+				}
+				actualizarNota();
+			}
+			
+			public function setSubDimension(subDim:Subdimension):void
+			{
+				this.subDimension = subDim;
+			}
+			
+			public function getSubDimension():Subdimension
+			{
+				return this.subDimension;
+			}
+			
+			public function getValor():int
+			{
+				if(habilitadosValores)
+				{
+					return parseInt(valor.selection.value.toString());
+				}
+				else
+				{
+					return -1;
+				}
+			}
+			
+			private function redimensionar():void
+			{
+				//if(this.nombre.textWidth
+				//this.nombre.width = this.nombre.textWidth;
+			}
+			
+			public function ocultarBotones():void
+			{
+				buttonAnyadir.visible = false;
+				buttonBorrar.visible = false;
+			}
+			
+			private function habilitarValores(event:Event=null):void
+			{
+				this.valoresBox.enabled = true;
+				habilitadosValores = true;
+			}
+			
+			private function deshabilitarValores(event:Event=null):void
+			{
+				this.valoresBox.enabled = false;
+				habilitadosValores = false;
+			}
+			
+			public function getHabilitado():Boolean
+			{
+				return valoresBox.enabled;
+			}
+			
+			/**
+			 * Devuelve la nota obtenida en el atributo respecto al número de valores y al porcentaje asignado
+			 * nota= (valor_seleccionado/num_valores)*porcentaje
+			 */
+			public function getNota():Number
+			{
+				var nota:Number = 0;
+				if(valor.selection != null && valorListaControl.selection != null)
+				{
+					var aux:Number = (parseFloat(valor.selection.value.toString())+1)/(this.subDimension.getValores().length);
+					nota = aux*this.getPorcentaje();
+					nota = nota * parseInt(valorListaControl.selection.value.toString());
+				}
+				else
+				{
+					// Buscamos si la escala de valoración se ha habilitado a través de la lista de control
+					var habilitado:Boolean = this.getHabilitado();
+					for(var i:int = 0; i < this.valoresListaControlBox.numChildren; i++)
+					{
+						if((valoresListaControlBox.getChildAt(i) as RadioButton).selected)
+						{
+							if(i == 1)
+							{
+								habilitado = true;
+							}
+						}
+					}
+					if(habilitado)
+					{
+						for(var i:int = 0; i < this.valoresBox.numChildren; i++)
+						{
+							if((valoresBox.getChildAt(i) as RadioButton).selected)
+							{
+								var aux:Number = (i+1)/this.subDimension.getValores().length;
+								nota = aux*this.getPorcentaje();
+							}
+						}
+					}
+				}
+				return nota;
+			}
+			
+			private function actualizarNota(event:Event=null):void
+			{
+				subDimension.actualizarNota();
+			}
+			
+			public function setPorcentaje(porcentaje:int):void
+			{
+				if(porcentaje <= 100 && porcentaje >= 0)
+				{
+					this.porcentaje = porcentaje;
+					this.porcentajeText.text = porcentaje.toString();
+				}
+			}
+			
+			public function getPorcentaje():Number
+			{
+				return this.porcentaje;
+			}
+			
+			/**
+			 * Establece los valores de selección en la lista de control y la escala de valoración
+			 */
+			public function selectValue(listaControl:int, escalaValoracion:int):void
+			{
+				// Seleccionamos el radio button en la lista de control
+				(this.valoresListaControlBox.getChildAt(listaControl) as RadioButton).selected = true;
+				if(listaControl == 0)
+				{
+					deshabilitarValores();
+				}
+				else
+				{
+					habilitarValores();
+				}
+				// Seleccionamos el radio button en la escala de valoración
+				(this.valoresBox.getChildAt(escalaValoracion) as RadioButton).selected = true;
+			}
+			
+			/**
+			 * Función que transforma la clase en un objeto XML
+			 */
+			public function toXML(nivel:int):String
+			{
+				// Construimos el texto XML
+				var texto:String = Common.tabs(nivel) + '<Attribute name="' + this.nombre.text + '" percentage="' + this.getPorcentaje() + '"';
+				if(this.getComentario() != null)
+				{
+					texto += ' comment="' + this.getComentario() + '"';
+				}
+				texto += '>\n';
+				// Valor seleccionado en la lista de control
+				texto += Common.tabs(nivel+1) + '<selectionControlList>' + this.valorListaControl.selection.value + '</selectionControlList>\n';
+				// Valor seleccionado en la escala de valoración
+				texto += Common.tabs(nivel+1) + '<selection>' + this.valor.selection.value + '</selection>\n';
+				
+				texto += Common.tabs(nivel) + '</Attribute>';
+				// Lo devolvemos en forma de objeto XML
+				return texto;
+			}
+			
+			public function borrar():void
+			{
+				this.subDimension.removeAtributo(this, true);
+				// Actualizamos los porcentajes del resto de subdimensiones
+				var atributos:ArrayCollection = this.subDimension.getAtributos();
+				// Actualizamos los porcentajes del resto de atributos
+				var total:int = 0;
+				for(var i:int = 0; i < atributos.length; i++)
+				{
+					total += (atributos.getItemAt(i) as Atributo).getPorcentaje();
+				}
+				if(total > 0)
+				{
+					for(var i:int = 0; i < atributos.length; i++)
+					{
+						var atr:Atributo = atributos.getItemAt(i) as Atributo;
+						if(atr.getPorcentaje() != -1)
+						{
+							var newPorcentaje:int = (atr.getPorcentaje()/total) * 100;
+							//var newPorcentaje:int = subDim.getPorcentaje() * (oldSubDimensiones/newSubdimensiones) * (total/100));//(oldSubDimensiones/newSubDimensiones) / (total/newSubDimensiones);
+							atr.setPorcentaje(newPorcentaje);
+						}
+					}
+				}
+				else if(total == 0)
+				{
+					for(var i:int = 0; i < atributos.length; i++)
+					{
+						var atr:Atributo = atributos.getItemAt(i) as Atributo;
+						atr.setPorcentaje(100/atributos.length);
+					}		
+				}
+				actualizarNota();
+			}
+			
+			public function ajustarLongitud(longitud:int, index:int, group:int):void
+			{
+				if(group == 0)
+				{
+					for(var i:int = 0; i < valoresListaControlBox.getChildren().length; i++)
+					{
+						if(i == index)
+						{
+							valoresListaControlBox.getChildAt(i).width = longitud;
+						}
+					}	
+				}
+				else
+				{
+					for(var i:int = 0; i < valoresBox.getChildren().length; i++)
+					{
+						if(i == index)
+						{
+							valoresBox.getChildAt(i).width = longitud;
+						}
+					}	
+				}
+			}
+			
+			public function ajustarAltura():void
+			{
+				this.nombre.validateNow();
+				this.nombre.height = this.nombre.getTextField().textHeight + this.nombre.getLineMetrics(0).height;
+			}
+			
+			/**
+			 * Deshabilita las opciones de edición para mostrar la ventana de evaluación
+			 */
+			public function setVistaEvaluacion():void
+			{
+				this.buttonAnyadir.visible = false;
+				this.buttonBorrar.visible = false;
+				this.buttonPorcentaje.enabled = false;
+				this.porcentajeText.editable = false;
+				this.nombre.editable = false;
+				this.nombre.validateNow();
+				this.nombre.height = this.nombre.getTextField().textHeight + this.nombre.getLineMetrics(0).height;
+			}
+			
+			public function getAdvertencias(advertencias:ArrayCollection):void
+			{
+				if(this.getName() == null || Common.trim(this.getName()) == "")
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_attribute_name") + "\n" + this.localization());
+				}
+				if(this.getPorcentaje() == 0)
+				{
+					advertencias.addItem(resourceManager.getString("myBundle", "warning_attribute_percentage") + "\n" + this.localization());
+				}
+			}
+			
+			public function getErrores(errores:ArrayCollection):void
+			{
+				
+			}
+			
+			private function localization():String
+			{
+				var localizacion:String =
+				resourceManager.getString("myBundle", "attribute") + this.getName() + " at" +
+				"\n" + resourceManager.getString("myBundle", "subdimension") + this.getSubDimension().getName() + " at" +
+				"\n" + resourceManager.getString("myBundle", "dimension") + this.getSubDimension().getDimension().getName() + " at" +
+				"\n" + resourceManager.getString("myBundle", "control_list_value_list") + ":" + this.getSubDimension().getDimension().getInstrumento().getName();
+				return localizacion;
+			}
+			
+			// Revisión ************************************************************************************
+			public function setComentario(comentario:String):void
+			{
+				this.buttonComentarios.setComentario(comentario);
+			}
+			
+			public function getComentario():String
+			{
+				return this.buttonComentarios.getComentario();
+			}
+			
+			public function revisar(atr:AtributoGenerico):void
+			{
+				// Marcamos en otro color la selección del revisor
+				var seleccion:int = atr.getIndex();
+				if(seleccion > -1)
+				{
+					// Si es cero es que estamos marcando el valor "No" en la lista de control
+					if(seleccion == 0)
+					{
+						var valores:Array = this.valoresListaControlBox.getChildren();
+						var rb:RadioButton = valores[seleccion] as RadioButton;
+						var posicion:int = rb.x;
+						rb.setStyle("fillColors", [0x00ff00, 0x00ff00]);
+						rb.setStyle("fillAlphas", [0.6,0.3]);
+					}
+					else
+					{
+						var valores:Array = this.valoresBox.getChildren();
+						var rb:RadioButton = valores[seleccion] as RadioButton;
+						var posicion:int = rb.x;
+						rb.setStyle("fillColors", [0x00ff00, 0x00ff00]);
+						rb.setStyle("fillAlphas", [0.6,0.3]);
+					}
+				}
+				// Añadimos el comentario, si lo hay, del revisor (coevaluador) en el elemento marcado
+				if(atr.getComentario())
+				{
+					if(seleccion == 0)
+					{
+						var bc:ButtonComentario = new ButtonComentario();
+						bc.setCoevaluador(true);
+						comentariosBoxListaControl.addChild(bc);
+						bc.x = posicion;
+						bc.setComentario(atr.getComentario());
+					}
+					else
+					{
+						var bc:ButtonComentario = new ButtonComentario();
+						bc.setEditable(false);
+						comentariosBox.addChild(bc);
+						bc.x = posicion;
+						bc.setComentario(atr.getComentario());
+					}
+				}
+			}
+			
+			public function setVistaRevision():void
+			{
+				this.buttonComentarios.visible = true;
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

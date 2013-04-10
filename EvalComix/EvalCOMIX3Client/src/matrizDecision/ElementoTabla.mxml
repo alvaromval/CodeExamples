@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" height="30" borderStyle="solid">
+	<mx:Label id="lbText" x="0" y="0" text="Label" height="100%" minWidth="170" maxWidth="170" textAlign="center" fontWeight="normal"/>
+	<mx:Script>
+		<![CDATA[
+			public function setText(text:String):void
+			{
+				this.lbText.text = text;
+			}
+			
+			public function setNegrita():void
+			{
+				this.lbText.setStyle("fontWeight", "bold");
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

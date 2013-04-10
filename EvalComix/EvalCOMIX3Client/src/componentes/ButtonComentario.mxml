@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Button xmlns:mx="http://www.adobe.com/2006/mxml" width="18" height="18" cornerRadius="0" click="anyadir_comentario()" icon="@Embed(source='../img/iconRevisar.gif')" toolTip="@Resource(bundle='myBundle', key='add_comment')">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.core.Application;
+			private var comentario:String = null;
+			private var editable:Boolean = true;
+			private var coevaluador:Boolean = false; // Indica si el comentario pertenece a un co-evaluador y no al evaluador actual
+			
+			public function setCoevaluador(coevaluador:Boolean):void
+			{
+				this.coevaluador = true;
+				this.setVistaRevision();
+			}
+			
+			public function getCoevaluador():Boolean
+			{
+				return this.coevaluador;
+			}
+			
+			public function setComentario(comentario:String):void
+			{
+				this.comentario = comentario;
+			}
+			
+			public function getComentario():String
+			{
+				return this.comentario;
+			}
+			
+			public function setEditable(editable:Boolean):void
+			{
+				this.editable = editable;
+			}
+			
+			public function setVistaRevision():void
+			{
+				this.setStyle("fillColors", [0x91F67A, 0xB0F99F]);
+				//this.setMensaje("@Resource(bundle='myBundle', key='comment')");
+			}
+		
+			private function anyadir_comentario():void
+			{
+				var vc:VentanaComentario = VentanaComentario(PopUpManager.createPopUp(Application.application.getVentana(), VentanaComentario, true));
+				if(this.getCoevaluador())
+				{
+					vc.setVistaCoevaluador();
+				}
+				PopUpManager.centerPopUp(vc);
+				if(this.getComentario() != null)
+				{
+					vc.setComentario(this.getComentario());
+				}
+				vc.setEditable(editable);
+				vc.addEventListener(Event.REMOVED, actualizarComentario);
+			}
+			
+			private function actualizarComentario(event:Event):void
+			{
+				if(event.currentTarget is VentanaComentario)
+				{
+					this.setComentario((event.currentTarget as VentanaComentario).getComentario());
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Button>

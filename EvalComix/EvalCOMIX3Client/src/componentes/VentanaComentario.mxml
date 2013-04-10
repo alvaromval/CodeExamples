@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" horizontalAlign="center" showCloseButton="true" title="@Resource(bundle='myBundle', key='comment')" close="cerrar()">
+	<mx:HBox width="100%">
+		<mx:VBox width="100%" horizontalAlign="center">
+			<mx:Label id="lbComments" text="@Resource(bundle='myBundle', key='your_comments')"/>
+			<mx:TextArea width="300" height="100" id="comentarioText" restrict="^\&quot;\'\&lt;\&gt;\\\/"/>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:Button label="@Resource(bundle='myBundle', key='close')" cornerRadius="0" click="cerrar()"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			public function setVistaCoevaluador():void
+			{
+				this.lbComments.text = resourceManager.getString("myBundle", "coexaminer_comments");
+				this.comentarioText.editable = false;
+			}
+			
+			public function getComentario():String
+			{
+				return this.comentarioText.text;
+			}
+			
+			public function setComentario(comentario:String):void
+			{
+				this.comentarioText.text = comentario;
+			}
+			
+			public function setEditable(editable:Boolean):void
+			{
+				this.comentarioText.editable = editable;
+			}
+			
+			
+			private function cerrar():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

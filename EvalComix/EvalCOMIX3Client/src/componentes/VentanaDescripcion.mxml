@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" width="400" height="300" title="@Resource(bundle='myBundle', key='instrument_description')" showCloseButton="true" close="cerrar()" borderColor="#E2E2E2" backgroundColor="#E2E2E2" borderStyle="solid">
+	<mx:TextArea width="100%" height="100%" id="descripcionText"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			public function init(editable:Boolean=true, descripcion:String=null)
+			{
+				this.descripcionText.editable = editable;
+				this.setDescripcion(descripcion);
+			}
+			
+			public function setDescripcion(descripcion:String):void
+			{
+				descripcionText.text = descripcion;
+			}
+			
+			public function getDescripcion():String
+			{
+				return this.descripcionText.text;
+			}
+			
+			private function cerrar():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" horizontalAlign="center" showCloseButton="true" title="@Resource(bundle='myBundle', key='about')" close="cerrar()" width="300">
+	<mx:Image source="img/evalcomix3-40.jpg"/>
+	<mx:HBox width="100%">
+		<mx:VBox width="100%" horizontalAlign="center">
+			<mx:Text id="aboutText"/>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:Button label="@Resource(bundle='myBundle', key='close')" cornerRadius="0" click="cerrar()"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			public function setText():void
+			{
+				aboutText.text = 
+				resourceManager.getString("myBundle", "direction") + ":\n" +
+				"  Maria Soledad Ibarra Sáiz\n" + 
+				"  Gregorio Rodríguez Gómez\n" +
+				resourceManager.getString("myBundle", "design_develop") + ":\n" +
+				"  Álvaro Martínez del Val\n" +
+				resourceManager.getString("myBundle", "translation") + ":\n" +
+				"  Álvaro Martínez del Val\n" +
+				resourceManager.getString("myBundle", "collaborating") + ":\n" +
+				"  Juan Manuel Dodero Beardo\n" +
+				"  Daniel Cabeza Sánchez\n" +
+				"  Miguel Ángel Gómez Ruiz\n" + 
+				"  Álvaro R. León Rodríguez\n" +
+				"  Antonio Gámez Mellado\n\n";
+			}
+			
+			private function cerrar():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>

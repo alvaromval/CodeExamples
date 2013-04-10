@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" height="300" verticalAlign="bottom" horizontalAlign="center" xmlns:ns1="editorVisual.componentes.*" minWidth="400" title="@Resource(bundle='myBundle', key='warning')" layout="vertical">
+	<mx:VBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<mx:Image source="img/iconWarning.png"/>
+		<mx:Text id="mensajeText" text="Label" x="91" y="116" height="90" width="100%" textAlign="center"/>
+		
+	</mx:VBox>
+	<mx:HBox width="100%" height="30">
+		<mx:Button id="buttonAceptar" label="@Resource(bundle='myBundle', key='save')" click="cerrar(event);" x="4" y="4" cornerRadius="0"/>
+		<mx:HBox width="100%">
+		</mx:HBox>
+		<mx:Button id="buttonErrores" label="@Resource(bundle='myBundle', key='see_errors')" cornerRadius="0" click="cerrar(event);"/>
+		<mx:Button id="buttonCancelar" label="@Resource(bundle='myBundle', key='cancel')" click="cerrar(event);" x="293" y="4" cornerRadius="0"/>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+		
+			private var acept:Boolean = false;
+			private var errores:Boolean = false;
+			
+			public function setMensaje(mensaje:String):void
+			{
+				this.mensajeText.text = mensaje;
+			}
+			
+			private function cerrar(event:MouseEvent):void
+			{
+				if(event.currentTarget == buttonAceptar)
+				{
+					this.acept = true;
+				}
+				else if(event.currentTarget == buttonCancelar)
+				{
+					this.acept = false;
+				}
+				else
+				{
+					this.acept = false;
+					this.errores = true;
+				}
+				PopUpManager.removePopUp (this);
+			}
+			
+			public function aceptar():Boolean
+			{
+				return this.acept;
+			}
+			
+			public function verErrores():Boolean
+			{
+				return this.errores;
+			}
+		]]>
+	</mx:Script>
+</mx:TitleWindow>
