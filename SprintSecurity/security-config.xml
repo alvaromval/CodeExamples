@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	   		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			http://www.springframework.org/schema/security 
+			http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+
+	<bean id="entryPoint"
+		class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint" />
+
+	<!-- This is where we configure Spring-Security  -->
+	<security:http auto-config="true" entry-point-ref="entryPoint"
+		access-denied-page="/messagebroker/auth/denied">
+		<security:intercept-url pattern="/data/*"
+			access="IS_AUTHENTICATED_FULLY" />
+		<security:intercept-url pattern="/*.html"
+			access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/*.swf"
+			access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/messagebroker/*"
+			access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/UploadFile/*"
+			access="IS_AUTHENTICATED_ANONYMOUSLY" />
+	</security:http>
+	
+	<!-- AMV Custom filter for the authentication using the connection with the LDAP -->
+	<security:authentication-manager>
+		<security:authentication-provider ref="phoenixAuthenticationProvider"/>
+	</security:authentication-manager>
+	
+	<!-- AMV We get the LDAP from a jndi t3 resource -->
+	<bean id="phoenixAuthenticationProvider" class="com.ferrovial.phoenix.generic.util.PhoenixAuthenticationProvider">
+		<property name="t3Dir" value="${ldap.jndi.t3}" />
+	</bean>
+	
+	<!-- AMV General configuration for the BOs access -->
+	<security:global-method-security>
+		<security:protect-pointcut>
+		<expression="execution(* com.ferrovial.phoenix.configuration.bo.ConfigurationService.init(..))" access="IS_AUTHENTICATED_FULLY"/>
+		<security:protect-pointcut>
+		<expression="execution(* com.ferrovial.phoenix.common.bo.InitConfigBO.*(..))" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:protect-pointcut>
+		<expression="execution(* com.ferrovial.phoenix.**.bo.*BO.*(..))" access="IS_AUTHENTICATED_FULLY" />
+	</security:global-method-security>
+
+</beans>
